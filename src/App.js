@@ -4,34 +4,13 @@ import classNames from 'classnames';
 import { useMachine } from '@xstate/react';
 import { createMachine, assign } from 'xstate';
 import { inspect } from '@xstate/inspect';
-import { buildModel, getListIndex } from './helpers';
+import { modelFromMatrix, coordsToListIndex, listIndexToCoords } from './helpers';
 
 import staticLevel from './level';
-
-const randomBlock = () => {
-  const types = [
-    'lime',
-    'red',
-    'blue'
-  ];
-  const randomtype = types[Math.floor(Math.random() * types.length)];
-  return {
-    type: randomtype
-  };
-};
-
-// const genRow = () => {
-//   const row = []
-//   for (let i = 0; i < 6; i++) {
-//     row.push(randomBlock());
-//   }
-//   return row;
-// };
 
 const initialContext = {
   moves: staticLevel.moves,
   goals: staticLevel.goals,
-  blocks: staticLevel.blocks,
   progress: {},
 };
 
@@ -48,55 +27,49 @@ const gameMachine = createMachine({
     MATCHING: {
       on: {
         'SELECT': {
-          target: 'CHECKING_CONDITIONS',
+          target: 'MATCHING',
           actions: assign((context, event) => {
-            const { goals, model, blocks, moves } = context;
-            const listIdx = getListIndex({ x: event.x, y: event.y }, model.dimensions.width);
-            const matches = model.matches[listIdx];
-            let newMoves = moves;
+            const { goals, model } = context;
+            let { moves } = context;
+            
+            const matched = model.getMatches({ x: event.x, y: event.y });
+
+            const { item: selectedItem } = model.getItem({ x: event.x, y: event.y });
+
+            if (selectedItem.type === 'empty') {
+              return;
+            }
 
             // a match was made
-            if (matches.length > 0) {
-
+            if (matched.length > 0) {
               // decrement moves
-              newMoves = moves - 1;
+              moves--;
 
-              matches.forEach((matchIdx) => {
-                const item = model.list[matchIdx];
-                blocks[item.y][item.x] = randomBlock();
+              matched.forEach((matchIdx) => {
+                model.remove(matchIdx);
               });
 
-              const { item } = model.list[listIdx];
-              const goal = goals.find((g) => g.type === item.type);
+              const goal = goals.find((g) => g.type === selectedItem.type);
               if (goal) {
-                const matchCount = matches.length;
+                const matchCount = matched.length;
                 const newGoal = Math.max(0, goal.count - matchCount);
                 // mutate the goal
                 goal.count = newGoal;
               }
             }
 
-            const newModel = buildModel(blocks);
+            model.shift();
+            model.spawn();
+            model.update();
 
             return {
               ...context,
-              blocks,
-              moves: newMoves,
-              model: newModel
+              moves
             };
           })
         }
-      }
-    },
-    CHECKING_CONDITIONS: {
+      },
       always: [
-        {
-          target: 'MATCHING',
-          cond: ({ moves, goals }) => {
-            const goalsRemaining = goals.filter((g) => g.count > 0);
-            return (moves > 0) && (goalsRemaining.length > 0);
-          }
-        },
         {
           target: 'LOST',
           cond: ({ moves, goals }) => {
@@ -108,7 +81,7 @@ const gameMachine = createMachine({
           target: 'WON',
           cond: ({ moves, goals }) => {
             const goalsRemaining = goals.filter((g) => g.count > 0);
-            return goalsRemaining.length == 0;
+            return goalsRemaining.length === 0;
           }
         },
       ]
@@ -127,6 +100,7 @@ const mapBackgroundColor = (type) => {
     'bg-lime-400': type === 'lime',
     'bg-red-400': type === 'red',
     'bg-blue-400': type === 'blue',
+    'bg-gray-900': type === 'empty'
   };
 };
 
@@ -140,27 +114,20 @@ const computeGoalRemaining = (goals, progress, type) => {
 function Grid({ blocks, onBlockClick }) {
   return (
     <div className='grid gap-2 grid-cols-6 grid-rows-2'>
-      {blocks.map((cols, rowIdx) => {
+      {blocks.map((block, rowIdx) => {
+        const { x, y, item } = block;
+        const { type } = item;
         return (
-          <React.Fragment key={rowIdx}>
-            {cols.map(({ type }, colIdx) => {
-              return (
-                <div
-                  key={`${rowIdx}-${colIdx}`}
-                  className={classNames(
-                    'w-full h-16 border-solid border-2 border-gray-700 rounded',
-                    mapBackgroundColor(type)
-                  )}
-                  onClick={() => {
-                    onBlockClick({
-                      x: colIdx,
-                      y: rowIdx
-                    })
-                  }}
-                />
-              );
-            })}
-          </React.Fragment>
+          <div
+            key={`${x}-${y}`}
+            className={classNames(
+              'w-full h-16 border-solid border-2 border-gray-700 rounded',
+              mapBackgroundColor(type)
+            )}
+            onClick={() => {
+              onBlockClick({ x, y })
+            }}
+          />
         );
       })}
     </div>
@@ -172,12 +139,13 @@ export default function App() {
     {
       context: {
         ...initialContext,
-        model: buildModel(staticLevel.blocks)
+        model: modelFromMatrix(staticLevel.matrix)
       },
       devTools: true,
     });
   const { context } = state;
-  const { goals, progress, blocks, moves } = context;
+  const { goals, progress, moves, model } = context;
+  const list = model.getList();
 
   return (
     <div className='max-w-md m-auto pt-16'>
@@ -208,7 +176,7 @@ export default function App() {
       </div>
       <div className='p-4 border-solid border-2 border-gray-700 rounded'>
 
-        {state.matches('MATCHING') ? <Grid blocks={blocks} onBlockClick={({ x, y }) => {
+        {state.matches('MATCHING') ? <Grid blocks={list} onBlockClick={({ x, y }) => {
           send({
             type: 'SELECT',
             x,

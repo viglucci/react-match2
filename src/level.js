@@ -1,4 +1,4 @@
-export default {
+const level = {
     moves: 10,
     goals: [
         {
@@ -14,7 +14,7 @@ export default {
             count: 8,
         }
     ],
-    blocks:
+    matrix:
         [
             [
                 { type: "blue" },
@@ -66,3 +66,5 @@ export default {
             ]
         ]
 };
+
+export default level;
