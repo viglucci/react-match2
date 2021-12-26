@@ -156,6 +156,21 @@ export default function App() {
         Created by <a href='https://twitter.com/kviglucci' className='text-blue-400 hover:underline' target='_blank' rel='noreferrer'>@kviglucci</a>
       </div>
 
+      <div className='mt-2 text-gray-300'>
+          <div className='text-xl'>Instructions</div>
+          <ul className='list-disc ml-8 mt-4'>
+            <li className='mb-2'>
+              Click on squares with atleast one adjacent same color square to clear the square and all connected same color squares from the board.
+            </li>
+            <li className='mb-2'>
+              Clear the listed number of squares for each color in the goals box at the top.
+            </li>
+            <li className='mb-2'>
+              Each successful match will exhaust one "move". Complete the goals with the set number of moves shown in the moves box above.
+            </li>
+          </ul>
+      </div>
+
     </div>
   )
 }
