@@ -112,14 +112,32 @@ export default function App() {
         }} /> : null}
 
         {state.matches('WON') ? (
-          <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase'>
-            You Win!
+          <div>
+            <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase mb-4'>
+              You Win!
+            </div>
+            <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase'>
+              <button
+                className='bg-gray-900 hover:bg-gray-800 text-gray-100 py-2 px-4 border border-gray-700 rounded shadow'
+                onClick={() => {
+                  window.location.reload();
+                }}>Play Again</button>
+            </div>
           </div>
         ) : null}
 
         {state.matches('LOST') ? (
-          <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase'>
-            Game Over!
+          <div>
+            <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase mb-4'>
+              Game Over!
+            </div>
+            <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase'>
+              <button
+                className='bg-gray-900 hover:bg-gray-800 text-gray-100 py-2 px-4 border border-gray-700 rounded shadow'
+                onClick={() => {
+                  window.location.reload();
+                }}>Play Again</button>
+            </div>
           </div>
         ) : null}
       </div>
