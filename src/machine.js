@@ -10,7 +10,7 @@ const machineConfig = {
                 IDLE: {
                     on: {
                         'SELECT': {
-                            target: 'SPAWNING',
+                            target: 'SHIFTING',
                             actions: assign((context, event) => {
                                 const { goals, model } = context;
                                 let { moves } = context;
@@ -41,7 +41,7 @@ const machineConfig = {
                                     });
                                 }
 
-                                model.shift();
+                                // model.shift();
                                 model.update();
 
                                 return {
@@ -53,9 +53,20 @@ const machineConfig = {
                         }
                     },
                 },
+                SHIFTING: {
+                    after: {
+                        200: 'SPAWNING'
+                    },
+                    exit: [
+                        assign(({ model }) => {
+                            model.shift();
+                            model.update();
+                        })
+                    ]
+                },
                 SPAWNING: {
                     after: {
-                        250: 'IDLE'
+                        200: 'IDLE'
                     },
                     exit: [
                         assign(({ model }) => {
