@@ -55,7 +55,7 @@ const machineConfig = {
                 },
                 SHIFTING: {
                     after: {
-                        200: 'SPAWNING'
+                        300: 'SPAWNING'
                     },
                     exit: [
                         assign(({ model }) => {
