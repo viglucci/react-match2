@@ -48,7 +48,7 @@ function Grid({ blocks, onBlockClick }) {
           <div
             key={`${x}-${y}`}
             className={classNames(
-              'w-full h-16 w-16 border-solid border-2 border-gray-700 rounded',
+              'w-full h-14 w-14 lg:h-16 lg:w-16 border-solid border-2 border-gray-700 rounded cursor-pointer',
               mapBackgroundColor(type)
             )}
             onClick={() => {
@@ -75,9 +75,9 @@ export default function App() {
   const list = model.getList();
 
   return (
-    <div className='pt-16 max-w-fit mx-auto'>
-      <div className='flex'>
-        <div>
+    <div className='p-2 pt-8 lg:pt-16 max-w-fit mx-auto'>
+      <div className='flex flex-col lg:flex-row'>
+        <div className='max-w-full lg:max-w-none'>
           <div className='flex mb-4'>
             <div className='relative flex justify-center items-center border-solid border-2 border-gray-700 rounded pt-6 p-4 mr-4'>
               {goals.map(({ type, count }, index) => {
@@ -155,7 +155,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className='ml-4 max-w-md text-gray-300 p-4 border-solid border-2 border-gray-700 rounded'>
+        <div className='mt-4 lg:mt-0 lg:ml-4 max-w-md lg:max-w-md text-gray-300 p-4 border-solid border-2 border-gray-700 rounded'>
           <div className='text-xl'>Instructions</div>
           <ul className='list-disc ml-8 mt-4'>
             <li className='mb-2'>
