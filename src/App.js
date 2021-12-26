@@ -4,9 +4,15 @@ import classNames from 'classnames';
 import { useMachine } from '@xstate/react';
 import { createMachine, assign } from 'xstate';
 import { inspect } from '@xstate/inspect';
-import { modelFromMatrix, coordsToListIndex, listIndexToCoords } from './helpers';
-
+import { modelFromMatrix } from './helpers';
+import machineConfig from './machine';
 import staticLevel from './level';
+
+// inspect({
+//   // options
+//   // url: 'https://statecharts.io/inspect', // (default)
+//   iframe: false // open in new window
+// });
 
 const initialContext = {
   moves: staticLevel.moves,
@@ -14,86 +20,7 @@ const initialContext = {
   progress: {},
 };
 
-inspect({
-  // options
-  // url: 'https://statecharts.io/inspect', // (default)
-  iframe: false // open in new window
-});
-
-const gameMachine = createMachine({
-  id: 'gameMachine',
-  initial: 'MATCHING',
-  states: {
-    MATCHING: {
-      on: {
-        'SELECT': {
-          target: 'MATCHING',
-          actions: assign((context, event) => {
-            const { goals, model } = context;
-            let { moves } = context;
-            
-            const matched = model.getMatches({ x: event.x, y: event.y });
-
-            const { item: selectedItem } = model.getItem({ x: event.x, y: event.y });
-
-            if (selectedItem.type === 'empty') {
-              return;
-            }
-
-            // a match was made
-            if (matched.length > 0) {
-              // decrement moves
-              moves--;
-
-              matched.forEach((matchIdx) => {
-                model.remove(matchIdx);
-              });
-
-              const goal = goals.find((g) => g.type === selectedItem.type);
-              if (goal) {
-                const matchCount = matched.length;
-                const newGoal = Math.max(0, goal.count - matchCount);
-                // mutate the goal
-                goal.count = newGoal;
-              }
-            }
-
-            model.shift();
-            model.spawn();
-            model.update();
-
-            return {
-              ...context,
-              moves
-            };
-          })
-        }
-      },
-      always: [
-        {
-          target: 'LOST',
-          cond: ({ moves, goals }) => {
-            const goalsRemaining = goals.filter((g) => g.count > 0);
-            return (moves <= 0) && (goalsRemaining.length > 0);
-          }
-        },
-        {
-          target: 'WON',
-          cond: ({ moves, goals }) => {
-            const goalsRemaining = goals.filter((g) => g.count > 0);
-            return goalsRemaining.length === 0;
-          }
-        },
-      ]
-    },
-    WON: {
-      type: 'final'
-    },
-    LOST: {
-      type: 'final'
-    },
-  }
-});
+const gameMachine = createMachine(machineConfig);
 
 const mapBackgroundColor = (type) => {
   return {
