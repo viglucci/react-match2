@@ -151,6 +151,11 @@ export default function App() {
           </div>
         ) : null}
       </div>
+
+      <div className='mt-2 text-gray-300'>
+        Created by <a href='https://twitter.com/kviglucci' className='text-blue-400 hover:underline' target='_blank' rel='noreferrer'>@kviglucci</a>
+      </div>
+
     </div>
   )
 }
