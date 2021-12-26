@@ -55,7 +55,7 @@ const machineConfig = {
                 },
                 SHIFTING: {
                     after: {
-                        300: 'SPAWNING'
+                        300: 'CONDITIONS'
                     },
                     exit: [
                         assign(({ model }) => {
@@ -75,23 +75,28 @@ const machineConfig = {
                         })
                     ]
                 },
-            },
-            always: [
-                {
-                    target: 'LOST',
-                    cond: ({ moves, goals }) => {
-                        const goalsRemaining = goals.filter((g) => g.count > 0);
-                        return (moves <= 0) && (goalsRemaining.length > 0);
-                    }
-                },
-                {
-                    target: 'WON',
-                    cond: ({ moves, goals }) => {
-                        const goalsRemaining = goals.filter((g) => g.count > 0);
-                        return goalsRemaining.length === 0;
-                    }
-                },
-            ]
+                CONDITIONS: {
+                    always: [
+                        {
+                            target: '#gameMachine.LOST',
+                            cond: ({ moves, goals }) => {
+                                const goalsRemaining = goals.filter((g) => g.count > 0);
+                                return (moves <= 0) && (goalsRemaining.length > 0);
+                            }
+                        },
+                        {
+                            target: '#gameMachine.WON',
+                            cond: ({ moves, goals }) => {
+                                const goalsRemaining = goals.filter((g) => g.count > 0);
+                                return goalsRemaining.length === 0;
+                            }
+                        },
+                        {
+                            target: 'SPAWNING'
+                        }
+                    ]
+                }
+            }
         },
         WON: {
             type: 'final'

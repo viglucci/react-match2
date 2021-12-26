@@ -48,7 +48,7 @@ function Grid({ blocks, onBlockClick }) {
           <div
             key={`${x}-${y}`}
             className={classNames(
-              'w-full h-16 border-solid border-2 border-gray-700 rounded',
+              'w-full h-16 w-16 border-solid border-2 border-gray-700 rounded',
               mapBackgroundColor(type)
             )}
             onClick={() => {
@@ -75,88 +75,87 @@ export default function App() {
   const list = model.getList();
 
   return (
-    <div className='max-w-md m-auto pt-16'>
-      <div className='flex mb-4'>
-        <div className='relative flex justify-center items-center border-solid border-2 border-gray-700 rounded pt-6 p-4 mr-4'>
-          {goals.map(({ type, count }, index) => {
-            return (
-              <div
-                key={type}
-                className={classNames(
-                  'relative w-16 h-16 border-solid border-2 border-gray-700 rounded',
-                  mapBackgroundColor(type),
-                  {
-                    'ml-4': index > 0
-                  }
-                )}
-              >
-                <div className='font-medium absolute top-10 left-10 flex justify-center items-center h-8 w-8 text-gray-100 text-md bg-gray-800 border border-solid border-gray-700 rounded-full'>
-                  {computeGoalRemaining(goals, progress, type)}
+    <div className='pt-16 max-w-fit mx-auto'>
+      <div className='flex'>
+        <div>
+          <div className='flex mb-4'>
+            <div className='relative flex justify-center items-center border-solid border-2 border-gray-700 rounded pt-6 p-4 mr-4'>
+              {goals.map(({ type, count }, index) => {
+                return (
+                  <div
+                    key={type}
+                    className={classNames(
+                      'relative w-16 h-16 border-solid border-2 border-gray-700 rounded',
+                      mapBackgroundColor(type),
+                      {
+                        'ml-4': index > 0
+                      }
+                    )}
+                  >
+                    <div className='font-medium absolute top-10 left-10 flex justify-center items-center h-8 w-8 text-gray-100 text-md bg-gray-800 border border-solid border-gray-700 rounded-full'>
+                      {computeGoalRemaining(goals, progress, type)}
+                    </div>
+                  </div>
+                );
+              })}
+              <div className='absolute -top-4 border-gray-700 border-solid border-2 rounded-full p-1 px-2 bg-gray-900 text-gray-100 uppercase text-xs'>
+                <span>Goals</span>
+              </div>
+            </div>
+            <div className='flex justify-center items-center grow border-solid border-2 border-gray-700 rounded p-4 relative'>
+              <div className='absolute -top-4 border-gray-700 border-solid border-2 rounded-full p-1 px-2 bg-gray-900 text-gray-100 uppercase text-xs'>
+                <span>Moves</span>
+              </div>
+              <span className='font-medium text-gray-100 text-4xl uppercase'>{moves}</span>
+            </div>
+          </div>
+          <div className='p-4 border-solid border-2 border-gray-700 rounded'>
+
+            {state.matches('MATCHING') ? <Grid blocks={list} onBlockClick={({ x, y }) => {
+              send({
+                type: 'SELECT',
+                x,
+                y
+              })
+            }} /> : null}
+
+            {state.matches('WON') ? (
+              <div>
+                <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase mb-4'>
+                  <span>You Win!</span>
+                </div>
+                <div className='flex justify-center items-center font-medium text-gray-100 uppercase'>
+                  <button
+                    className='bg-gray-900 hover:border-blue-400 text-gray-100 py-2 px-4 border border-gray-700 rounded shadow uppercase text-sm'
+                    onClick={() => {
+                      window.location.reload();
+                    }}>
+                    Play Again
+                  </button>
                 </div>
               </div>
-            );
-          })}
-          <div className='absolute -top-4 border-gray-700 border-solid border-2 rounded-full p-1 px-2 bg-gray-900 text-gray-100 uppercase text-xs'>
-            <span>Goals</span>
+            ) : null}
+
+            {state.matches('LOST') ? (
+              <div>
+                <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase mb-4'>
+                  <span>Game Over!</span>
+                </div>
+                <div className='flex justify-center items-center font-medium text-gray-100 uppercase'>
+                  <button
+                    className='bg-gray-900 hover:border-blue-400 text-gray-100 py-2 px-4 border border-gray-700 rounded shadow uppercase text-sm'
+                    onClick={() => {
+                      window.location.reload();
+                    }}>
+                    Play Again
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
-        <div className='flex justify-center items-center grow border-solid border-2 border-gray-700 rounded p-4 relative'>
-          <div className='absolute -top-4 border-gray-700 border-solid border-2 rounded-full p-1 px-2 bg-gray-900 text-gray-100 uppercase text-xs'>
-            <span>Moves</span>
-          </div>
-          <span className='font-medium text-gray-100 text-4xl uppercase '>{moves}</span>
-        </div>
-      </div>
-      <div className='p-4 border-solid border-2 border-gray-700 rounded'>
 
-        {state.matches('MATCHING') ? <Grid blocks={list} onBlockClick={({ x, y }) => {
-          send({
-            type: 'SELECT',
-            x,
-            y
-          })
-        }} /> : null}
-
-        {state.matches('WON') ? (
-          <div>
-            <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase mb-4'>
-              <span>You Win!</span>
-            </div>
-            <div className='flex justify-center items-center font-medium text-gray-100 uppercase'>
-              <button
-                className='bg-gray-900 hover:border-blue-400 text-gray-100 py-2 px-4 border border-gray-700 rounded shadow uppercase text-sm'
-                onClick={() => {
-                  window.location.reload();
-                }}>
-                Play Again
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        {state.matches('LOST') ? (
-          <div>
-            <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase mb-4'>
-              <span>Game Over!</span>
-            </div>
-            <div className='flex justify-center items-center font-medium text-gray-100 uppercase'>
-              <button
-                className='bg-gray-900 hover:border-blue-400 text-gray-100 py-2 px-4 border border-gray-700 rounded shadow uppercase text-sm'
-                onClick={() => {
-                  window.location.reload();
-                }}>
-                Play Again
-              </button>
-            </div>
-          </div>
-        ) : null}
-      </div>
-
-      <div className='mt-2 text-gray-300'>
-        Created by <a href='https://twitter.com/kviglucci' className='text-blue-400 hover:underline' target='_blank' rel='noreferrer'>@kviglucci</a>
-      </div>
-
-      <div className='mt-2 text-gray-300'>
+        <div className='ml-4 max-w-md text-gray-300 p-4 border-solid border-2 border-gray-700 rounded'>
           <div className='text-xl'>Instructions</div>
           <ul className='list-disc ml-8 mt-4'>
             <li className='mb-2'>
@@ -169,8 +168,13 @@ export default function App() {
               Each successful match will exhaust one "move". Complete the goals with the set number of moves shown in the moves box above.
             </li>
           </ul>
+        </div>
+      </div>
+
+      <div className='mt-2 text-gray-300'>
+        Created by <a href='https://twitter.com/kviglucci' className='text-blue-400 hover:underline' target='_blank' rel='noreferrer'>@kviglucci</a>
       </div>
 
     </div>
-  )
+  );
 }
