@@ -77,7 +77,7 @@ export default function App() {
   return (
     <div className='max-w-md m-auto pt-16'>
       <div className='flex mb-4'>
-        <div className='flex border-solid border-2 border-gray-700 rounded p-4 mr-4'>
+        <div className='relative flex justify-center items-center border-solid border-2 border-gray-700 rounded pt-6 p-4 mr-4'>
           {goals.map(({ type, count }, index) => {
             return (
               <div
@@ -96,9 +96,15 @@ export default function App() {
               </div>
             );
           })}
+          <div className='absolute -top-4 border-gray-700 border-solid border-2 rounded-full p-1 px-2 bg-gray-900 text-gray-100 uppercase text-xs'>
+            <span>Goals</span>
+          </div>
         </div>
-        <div className='flex justify-center items-center grow border-solid border-2 border-gray-700 rounded p-4 font-medium text-gray-100 text-xl uppercase'>
-          <span>Moves: {moves}</span>
+        <div className='flex justify-center items-center grow border-solid border-2 border-gray-700 rounded p-4 relative'>
+          <div className='absolute -top-4 border-gray-700 border-solid border-2 rounded-full p-1 px-2 bg-gray-900 text-gray-100 uppercase text-xs'>
+            <span>Moves</span>
+          </div>
+          <span className='font-medium text-gray-100 text-4xl uppercase '>{moves}</span>
         </div>
       </div>
       <div className='p-4 border-solid border-2 border-gray-700 rounded'>
@@ -114,14 +120,16 @@ export default function App() {
         {state.matches('WON') ? (
           <div>
             <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase mb-4'>
-              You Win!
+              <span>You Win!</span>
             </div>
-            <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase'>
+            <div className='flex justify-center items-center font-medium text-gray-100 uppercase'>
               <button
-                className='bg-gray-900 hover:bg-gray-800 text-gray-100 py-2 px-4 border border-gray-700 rounded shadow'
+                className='bg-gray-900 hover:border-blue-400 text-gray-100 py-2 px-4 border border-gray-700 rounded shadow uppercase text-sm'
                 onClick={() => {
                   window.location.reload();
-                }}>Play Again</button>
+                }}>
+                Play Again
+              </button>
             </div>
           </div>
         ) : null}
@@ -129,14 +137,16 @@ export default function App() {
         {state.matches('LOST') ? (
           <div>
             <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase mb-4'>
-              Game Over!
+              <span>Game Over!</span>
             </div>
-            <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase'>
+            <div className='flex justify-center items-center font-medium text-gray-100 uppercase'>
               <button
-                className='bg-gray-900 hover:bg-gray-800 text-gray-100 py-2 px-4 border border-gray-700 rounded shadow'
+                className='bg-gray-900 hover:border-blue-400 text-gray-100 py-2 px-4 border border-gray-700 rounded shadow uppercase text-sm'
                 onClick={() => {
                   window.location.reload();
-                }}>Play Again</button>
+                }}>
+                Play Again
+              </button>
             </div>
           </div>
         ) : null}
