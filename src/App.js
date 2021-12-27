@@ -27,6 +27,7 @@ const mapBackgroundColor = (type) => {
     'bg-lime-400': type === 'lime',
     'bg-red-400': type === 'red',
     'bg-blue-400': type === 'blue',
+    'bg-orange-400': type === 'orange',
     'bg-gray-900': type === 'empty'
   };
 };
@@ -45,11 +46,12 @@ function Grid({ blocks, onBlockClick }) {
         const { x, y, item } = block;
         const { type } = item;
         return (
-          <div
+          <button
             key={`${x}-${y}`}
             className={classNames(
-              'w-full h-14 w-14 lg:h-16 lg:w-16 border-solid border-2 border-gray-700 rounded cursor-pointer',
-              mapBackgroundColor(type)
+              'h-14 w-14 lg:h-16 lg:w-16 border-solid border-2 border-gray-700 rounded',
+              mapBackgroundColor(type),
+              'cursor-pointer'
             )}
             onClick={() => {
               onBlockClick({ x, y })

@@ -1,4 +1,11 @@
 
+const BLOCK_TYPES = [
+    'lime',
+    'red',
+    'blue',
+    'orange'
+];
+
 function visitEach(matrix, cb) {
     for (let j = 0; j < matrix.length; j++) {
         for (let i = 0; i < matrix[0].length; i++) {
@@ -29,13 +36,8 @@ function isOnBoard({ x, y }, { width, height }) {
 }
 
 
-const randomBlock = () => {
-    const types = [
-        'lime',
-        'red',
-        'blue'
-    ];
-    const randomtype = types[Math.floor(Math.random() * types.length)];
+const randomBlock = (allowedBlocks) => {
+    const randomtype = allowedBlocks[Math.floor(Math.random() * allowedBlocks.length)];
     return {
         type: randomtype
     };
@@ -127,11 +129,11 @@ class Model {
         }
     }
 
-    spawn() {
-        for (let i = 0; i < this._list.length; i++) {
+    spawn(blockTypes) {
+        for (let i = this._list.length - 1; i >= 0; i--) {
             const { item } = this._list[i];
             if (item.type === 'empty') {
-                this._list[i].item = randomBlock();
+                this._list[i].item = randomBlock(blockTypes);
             }
         }
     }

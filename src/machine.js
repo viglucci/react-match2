@@ -62,15 +62,17 @@ const machineConfig = {
                             model.shift();
                             model.update();
                         })
-                    ]
+                    ] 
                 },
                 SPAWNING: {
                     after: {
                         200: 'IDLE'
                     },
                     exit: [
-                        assign(({ model }) => {
-                            model.spawn();
+                        assign(({ model, goals }) => {
+                            // only spawn in blocks which are part of the current goals
+                            const allowBlockTypes = goals.map(g => g.type);
+                            model.spawn(allowBlockTypes);
                             model.update();
                         })
                     ]
