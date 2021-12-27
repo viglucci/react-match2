@@ -1,10 +1,10 @@
 
-const BLOCK_TYPES = [
-    'lime',
-    'red',
-    'blue',
-    'orange'
-];
+// const BLOCK_TYPES = [
+//     'lime',
+//     'red',
+//     'blue',
+//     'orange'
+// ];
 
 function visitEach(matrix, cb) {
     for (let j = 0; j < matrix.length; j++) {
