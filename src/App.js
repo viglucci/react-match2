@@ -61,6 +61,32 @@ function Grid({ blocks, onBlockClick }) {
   );
 }
 
+function WinLossOverlay({ state }) {
+  let title = 'Game Over';
+  if (state === 'WON') {
+    title = 'You Win!'
+  }
+  console.log(state)
+  return (
+    <div
+      className='absolute top-0 bottom-0 left-0 right-0 bg-gray-900/90 flex justify-center items-center flex-col'
+    >
+      <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase mb-4'>
+        <span>{title}</span>
+      </div>
+      <div className='font-medium text-gray-100 uppercase'>
+        <button
+          className='bg-gray-900 hover:border-blue-400 text-gray-100 py-2 px-4 border border-gray-700 rounded shadow uppercase text-sm'
+          onClick={() => {
+            window.location.reload();
+          }}>
+          Play Again
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [state, send] = useMachine(gameMachine,
     {
@@ -109,49 +135,20 @@ export default function App() {
               <span className='font-medium text-gray-100 text-4xl uppercase'>{moves}</span>
             </div>
           </div>
-          <div className='p-4 border-solid border-2 border-gray-700 rounded'>
+          <div className='p-4 border-solid border-2 border-gray-700 rounded relative'>
 
-            {state.matches('MATCHING') ? <Grid blocks={list} onBlockClick={({ x, y }) => {
+            <Grid blocks={list} onBlockClick={({ x, y }) => {
+              if (!state.matches('MATCHING')) { return; }
               send({
                 type: 'SELECT',
                 x,
                 y
               })
-            }} /> : null}
+            }} />
 
-            {state.matches('WON') ? (
-              <div>
-                <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase mb-4'>
-                  <span>You Win!</span>
-                </div>
-                <div className='flex justify-center items-center font-medium text-gray-100 uppercase'>
-                  <button
-                    className='bg-gray-900 hover:border-blue-400 text-gray-100 py-2 px-4 border border-gray-700 rounded shadow uppercase text-sm'
-                    onClick={() => {
-                      window.location.reload();
-                    }}>
-                    Play Again
-                  </button>
-                </div>
-              </div>
-            ) : null}
-
-            {state.matches('LOST') ? (
-              <div>
-                <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase mb-4'>
-                  <span>Game Over!</span>
-                </div>
-                <div className='flex justify-center items-center font-medium text-gray-100 uppercase'>
-                  <button
-                    className='bg-gray-900 hover:border-blue-400 text-gray-100 py-2 px-4 border border-gray-700 rounded shadow uppercase text-sm'
-                    onClick={() => {
-                      window.location.reload();
-                    }}>
-                    Play Again
-                  </button>
-                </div>
-              </div>
-            ) : null}
+            {state.matches('WON') || state.matches('LOST')
+              ? <WinLossOverlay state={state.value} />
+              : null}
           </div>
         </div>
 
@@ -174,7 +171,6 @@ export default function App() {
       <div className='mt-2 text-gray-300'>
         Created by <a href='https://twitter.com/kviglucci' className='text-blue-400 hover:underline' target='_blank' rel='noreferrer'>@kviglucci</a>
       </div>
-
     </div>
   );
 }
