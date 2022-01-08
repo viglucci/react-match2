@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import classNames from 'classnames';
 import { useMachine } from '@xstate/react';
-import { OrthographicCamera, OrbitControls } from '@react-three/drei';
+import { OrthographicCamera, OrbitControls, useHelper } from '@react-three/drei';
 import { createMachine } from 'xstate';
 // import { inspect } from '@xstate/inspect';
 import { modelFromMatrix } from './helpers';
@@ -11,6 +11,7 @@ import staticLevel from './level';
 import './App.css';
 
 import colors from 'tailwindcss/colors';
+import { PointLightHelper } from 'three';
 
 
 // inspect({
@@ -59,7 +60,7 @@ function Box({
   color,
   ...rest
 }) {
-  
+
   // reference gives us direct access to the THREE.Mesh object
   const ref = useRef();
 
@@ -139,34 +140,22 @@ function vec3FromCoords({ x, y, padding, width, height, matrixWidth, matrixHeigh
   return vec3;
 }
 
-function Grid({ blocks, onBlockClick }) {
-
+function Stage({ blocks, onBlockClick }) {
   return (
     <Canvas>
-      <OrthographicCamera
-        makeDefault
-        zoom={55}
-        position={[
-          7, 10, 7
-        ]}
-      />
+      <Scene blocks={blocks} onBlockClick={onBlockClick} />
+    </Canvas>
+  );
+}
 
-      <OrbitControls
-        enablePan={true}
-        enableZoom={true}
-        enableRotate={true}
-      />
-
-      {/* <gridHelper args={[10, 10, `white`, `gray`]} /> */}
-
-      <ambientLight />
-      <pointLight position={[0, 10, 0]} />
-
+function BlockGrid({ blocks, onBlockClick }) {
+  return (
+    <>
       {blocks.map((block, rowIdx) => {
 
         const { x, y, item } = block;
         const { type } = item;
-        
+
         const vec3 = vec3FromCoords({
           x,
           y,
@@ -189,9 +178,42 @@ function Grid({ blocks, onBlockClick }) {
           />
         );
       })}
+    </>
+  );
+}
+
+function Scene({ blocks, onBlockClick }) {
+
+  const cameraRef = useRef();
+  const pointLightRef = useRef();
+  useHelper(pointLightRef, PointLightHelper, 0.5, 'red');
+
+  return (
+    <>
+      <OrthographicCamera
+        ref={cameraRef}
+        makeDefault
+        zoom={55}
+        position={[
+          7, 10, 7
+        ]}
+      />
+
+      <OrbitControls
+        enablePan={true}
+        enableZoom={true}
+        enableRotate={true}
+      />
+
+      <gridHelper args={[30, 30, colors.gray['800'], colors.gray['800']]} />
+
+      <ambientLight />
+      <pointLight ref={pointLightRef} position={[0, 10, 30]} />
+
+      <BlockGrid blocks={blocks} onBlockClick={onBlockClick} />
 
       {/* <CameraDolly isZoom={false} /> */}
-    </Canvas>
+    </>
   );
 }
 
@@ -270,7 +292,7 @@ export default function App() {
           </div>
           <div className='p-4 border-solid border-2 border-gray-700 rounded relative' style={{ width: 600, height: 600 }}>
 
-            <Grid blocks={list} onBlockClick={({ x, y }) => {
+            <Stage blocks={list} onBlockClick={({ x, y }) => {
               if (!state.matches('MATCHING')) { return; }
               send({
                 type: 'SELECT',
