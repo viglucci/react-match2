@@ -1,12 +1,16 @@
-import React from 'react';
-import './App.css';
+import React, { useRef, useState } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import classNames from 'classnames';
 import { useMachine } from '@xstate/react';
+import * as THREE from 'three';
+import { OrthographicCamera, OrbitControls } from '@react-three/drei';
 import { createMachine } from 'xstate';
 // import { inspect } from '@xstate/inspect';
 import { modelFromMatrix } from './helpers';
 import machineConfig from './machine';
 import staticLevel from './level';
+import './App.css';
+import level from './level';
 
 // inspect({
 //   // options
@@ -39,27 +43,160 @@ const computeGoalRemaining = (goals, progress, type) => {
   return goal.count - current;
 };
 
-function Grid({ blocks, onBlockClick }) {
+function Box({
+  geometry,
+  color,
+  ...rest
+}) {
+  // This reference gives us direct access to the THREE.Mesh object
+  const ref = useRef();
+  // Hold state for hovered and clicked events
+  const [hovered, hover] = useState(false);
+  const [clicked, click] = useState(false);
+  // Subscribe this component to the render-loop, rotate the mesh every frame
+  // useFrame((state, delta) => (ref.current.rotation.x += 0.01));
+  // Return the view, these are regular Threejs elements expressed in JSX
+
+  // console.log(rest.position);
+
   return (
-    <div className='grid gap-2 grid-cols-6 grid-rows-2'>
+    <mesh
+      {...rest}
+      ref={ref}
+      scale={1}
+    // onClick={(event) => click(!clicked)}
+    // onPointerOver={(event) => hover(true)}
+    // onPointerOut={(event) => hover(false)}
+    >
+      <boxGeometry args={geometry} />
+      <meshStandardMaterial color={color} />
+    </mesh>
+  )
+}
+
+const CameraDolly = ({ isZoom }) => {
+  const vec = new THREE.Vector3()
+
+  useFrame((state) => {
+    // const step = 0.1
+    // const x = isZoom ? 0 : 5
+    // const y = isZoom ? 10 : 5
+    // const z = isZoom ? 10 : 5
+
+    // console.log({ x, y, z });
+
+    // state.camera.position.lerp(vec.set(x, y, z), step)
+    // console.log(state.camera.position)
+    state.camera.lookAt(0, 0, 0);
+    state.camera.updateProjectionMatrix();
+  });
+
+  return null
+}
+
+function vec3FromCoords({ x, y, padding, width, height, matrixWidth, matrixHeight }) {
+
+  const originX = (padding / 2) + (width / 2);
+  const originY = (padding / 2) + (height / 2);
+
+  const vec3 = [originX, height / 2, originY];
+
+  const offsetX = width + padding;
+  const midX = matrixWidth / 2;
+  let positionFromCenterX = (x % midX) + 1;
+
+  // handling blocks left of center
+  if (x < midX) {
+    positionFromCenterX = positionFromCenterX - (midX + 1);
+    vec3[0] = originX + (positionFromCenterX * offsetX);
+  }
+  // blocks right of center
+  else if (positionFromCenterX > 1) {
+    vec3[0] = originX + ((positionFromCenterX - 1) * offsetX);
+  }
+
+  const offsetY = height + padding;
+  const midY = matrixHeight / 2;
+  let positionFromCenterY = (y % midY) + 1;
+
+  // handling blocks top of center
+  if (y < midY) {
+    positionFromCenterY = positionFromCenterY - (midY + 1);
+    vec3[2] = originY + (positionFromCenterY * offsetY);
+  }
+  // blocks bottom of center
+  else if (positionFromCenterY > 1) {
+    vec3[2] = originY + ((positionFromCenterY - 1) * offsetY);
+  }
+
+  // console.log({
+  //   x,
+  //   y,
+  //   positionX: positionFromCenterX,
+  //   positionY: positionFromCenterY,
+  //   vec3
+  // });
+
+  return vec3;
+}
+
+function Grid({ blocks, onBlockClick }) {
+
+  const [isZoom, setZoom] = useState(false)
+  const toggleZoom = () => setZoom((active) => !active)
+
+  return (
+    <Canvas>
+      <OrthographicCamera
+        makeDefault
+        zoom={70}
+        position={[
+          // 0, 10, 0
+          0, 20, 0
+        ]}
+      />
+
+      <OrbitControls
+        enablePan={true}
+        enableZoom={true}
+        enableRotate={true}
+      />
+
+      {/* <gridHelper args={[10, 10, `white`, `gray`]} /> */}
+
+      <ambientLight />
+      <pointLight position={[0, 10, 0]} />
+
       {blocks.map((block, rowIdx) => {
+
         const { x, y, item } = block;
         const { type } = item;
+        
+        const vec3 = vec3FromCoords({
+          x,
+          y,
+          padding: 0.2,
+          width: 1,
+          height: 1,
+          matrixWidth: 6,
+          matrixHeight: 6
+        });
+
         return (
-          <button
+          <Box
             key={`${x}-${y}`}
-            className={classNames(
-              'h-14 w-14 lg:h-16 lg:w-16 border-solid border-2 border-gray-700 rounded',
-              mapBackgroundColor(type),
-              'cursor-pointer'
-            )}
+            position={vec3}
+            geometry={[1, 1, 1]}
+            color={type}
             onClick={() => {
               onBlockClick({ x, y })
             }}
           />
         );
       })}
-    </div>
+
+      <CameraDolly isZoom={isZoom} />
+    </Canvas>
   );
 }
 
@@ -137,7 +274,7 @@ export default function App() {
               <span className='font-medium text-gray-100 text-4xl uppercase'>{moves}</span>
             </div>
           </div>
-          <div className='p-4 border-solid border-2 border-gray-700 rounded relative'>
+          <div className='p-4 border-solid border-2 border-gray-700 rounded relative' style={{ width: 600, height: 600 }}>
 
             <Grid blocks={list} onBlockClick={({ x, y }) => {
               if (!state.matches('MATCHING')) { return; }
