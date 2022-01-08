@@ -10,6 +10,9 @@ import machineConfig from './machine';
 import staticLevel from './level';
 import './App.css';
 
+import colors from 'tailwindcss/colors';
+
+
 // inspect({
 //   // options
 //   // url: 'https://statecharts.io/inspect', // (default)
@@ -24,7 +27,7 @@ const initialContext = {
 
 const gameMachine = createMachine(machineConfig);
 
-const mapBackgroundColor = (type) => {
+const mapBackgroundColorClass = (type) => {
   return {
     'bg-lime-400': type === 'lime',
     'bg-red-400': type === 'red',
@@ -32,6 +35,16 @@ const mapBackgroundColor = (type) => {
     'bg-orange-400': type === 'orange',
     'bg-gray-900': type === 'empty'
   };
+};
+
+const mapMeshColor = (type) => {
+  return ({
+    'lime': colors.lime['500'],
+    'red': colors.red['500'],
+    'blue': colors.blue['500'],
+    'orange': colors.orange['500'],
+    'empty': colors.gray['500'],
+  })[type];
 };
 
 const computeGoalRemaining = (goals, progress, type) => {
@@ -54,6 +67,8 @@ function Box({
   // useFrame((state, delta) => (ref.current.rotation.x += 0.01));
   // Return the view, these are regular Threejs elements expressed in JSX
 
+  const hexColor = mapMeshColor(color);
+
   return (
     <mesh
       {...rest}
@@ -61,30 +76,30 @@ function Box({
       scale={1}
     >
       <boxGeometry args={geometry} />
-      <meshStandardMaterial color={color} />
+      <meshStandardMaterial color={hexColor} />
     </mesh>
   )
 }
 
-const CameraDolly = ({ isZoom }) => {
-  // const vec = new THREE.Vector3();
+// const CameraDolly = ({ isZoom }) => {
+//   // const vec = new THREE.Vector3();
 
-  useFrame((state) => {
-    // const step = 0.1
-    // const x = isZoom ? 0 : 5
-    // const y = isZoom ? 10 : 5
-    // const z = isZoom ? 10 : 5
+//   useFrame((state) => {
+//     // const step = 0.1
+//     // const x = isZoom ? 0 : 5
+//     // const y = isZoom ? 10 : 5
+//     // const z = isZoom ? 10 : 5
 
-    // console.log({ x, y, z });
+//     // console.log({ x, y, z });
 
-    // state.camera.position.lerp(vec.set(x, y, z), step)
-    // console.log(state.camera.position)
-    state.camera.lookAt(0, 0, 0);
-    state.camera.updateProjectionMatrix();
-  });
+//     // state.camera.position.lerp(vec.set(x, y, z), step)
+//     console.log(state.camera.position)
+//     state.camera.lookAt(0, 0, 0);
+//     state.camera.updateProjectionMatrix();
+//   });
 
-  return null;
-}
+//   return null;
+// }
 
 function vec3FromCoords({ x, y, padding, width, height, matrixWidth, matrixHeight }) {
 
@@ -130,9 +145,9 @@ function Grid({ blocks, onBlockClick }) {
     <Canvas>
       <OrthographicCamera
         makeDefault
-        zoom={70}
+        zoom={55}
         position={[
-          0, 20, 0
+          7, 10, 7
         ]}
       />
 
@@ -175,7 +190,7 @@ function Grid({ blocks, onBlockClick }) {
         );
       })}
 
-      <CameraDolly isZoom={false} />
+      {/* <CameraDolly isZoom={false} /> */}
     </Canvas>
   );
 }
@@ -185,7 +200,6 @@ function WinLossOverlay({ state }) {
   if (state === 'WON') {
     title = 'You Win!'
   }
-  console.log(state)
   return (
     <div
       className='absolute top-0 bottom-0 left-0 right-0 bg-gray-900/90 flex justify-center items-center flex-col'
@@ -231,7 +245,7 @@ export default function App() {
                     key={type}
                     className={classNames(
                       'relative w-16 h-16 border-solid border-2 border-gray-700 rounded',
-                      mapBackgroundColor(type),
+                      mapBackgroundColorClass(type),
                       {
                         'ml-4': index > 0
                       }
