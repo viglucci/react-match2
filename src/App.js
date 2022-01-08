@@ -1,8 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import classNames from 'classnames';
 import { useMachine } from '@xstate/react';
-import * as THREE from 'three';
 import { OrthographicCamera, OrbitControls } from '@react-three/drei';
 import { createMachine } from 'xstate';
 // import { inspect } from '@xstate/inspect';
@@ -10,7 +9,6 @@ import { modelFromMatrix } from './helpers';
 import machineConfig from './machine';
 import staticLevel from './level';
 import './App.css';
-import level from './level';
 
 // inspect({
 //   // options
@@ -48,25 +46,19 @@ function Box({
   color,
   ...rest
 }) {
-  // This reference gives us direct access to the THREE.Mesh object
+  
+  // reference gives us direct access to the THREE.Mesh object
   const ref = useRef();
-  // Hold state for hovered and clicked events
-  const [hovered, hover] = useState(false);
-  const [clicked, click] = useState(false);
+
   // Subscribe this component to the render-loop, rotate the mesh every frame
   // useFrame((state, delta) => (ref.current.rotation.x += 0.01));
   // Return the view, these are regular Threejs elements expressed in JSX
-
-  // console.log(rest.position);
 
   return (
     <mesh
       {...rest}
       ref={ref}
       scale={1}
-    // onClick={(event) => click(!clicked)}
-    // onPointerOver={(event) => hover(true)}
-    // onPointerOut={(event) => hover(false)}
     >
       <boxGeometry args={geometry} />
       <meshStandardMaterial color={color} />
@@ -75,7 +67,7 @@ function Box({
 }
 
 const CameraDolly = ({ isZoom }) => {
-  const vec = new THREE.Vector3()
+  // const vec = new THREE.Vector3();
 
   useFrame((state) => {
     // const step = 0.1
@@ -91,7 +83,7 @@ const CameraDolly = ({ isZoom }) => {
     state.camera.updateProjectionMatrix();
   });
 
-  return null
+  return null;
 }
 
 function vec3FromCoords({ x, y, padding, width, height, matrixWidth, matrixHeight }) {
@@ -129,21 +121,10 @@ function vec3FromCoords({ x, y, padding, width, height, matrixWidth, matrixHeigh
     vec3[2] = originY + ((positionFromCenterY - 1) * offsetY);
   }
 
-  // console.log({
-  //   x,
-  //   y,
-  //   positionX: positionFromCenterX,
-  //   positionY: positionFromCenterY,
-  //   vec3
-  // });
-
   return vec3;
 }
 
 function Grid({ blocks, onBlockClick }) {
-
-  const [isZoom, setZoom] = useState(false)
-  const toggleZoom = () => setZoom((active) => !active)
 
   return (
     <Canvas>
@@ -151,7 +132,6 @@ function Grid({ blocks, onBlockClick }) {
         makeDefault
         zoom={70}
         position={[
-          // 0, 10, 0
           0, 20, 0
         ]}
       />
@@ -195,7 +175,7 @@ function Grid({ blocks, onBlockClick }) {
         );
       })}
 
-      <CameraDolly isZoom={isZoom} />
+      <CameraDolly isZoom={false} />
     </Canvas>
   );
 }
