@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import {
   Canvas,
-  // useFrame
+  useFrame
 } from '@react-three/fiber';
 import classNames from 'classnames';
 import { useMachine } from '@xstate/react';
@@ -14,7 +14,7 @@ import staticLevel from './level';
 import './App.css';
 
 import colors from 'tailwindcss/colors';
-import { PointLightHelper } from 'three';
+import { Vector3, PointLightHelper } from 'three';
 
 
 // inspect({
@@ -61,11 +61,12 @@ const computeGoalRemaining = (goals, progress, type) => {
 function Box({
   geometry,
   color,
+  position,
   ...rest
 }) {
 
   // reference gives us direct access to the THREE.Mesh object
-  const ref = useRef();
+  const mesh = useRef();
 
   // Subscribe this component to the render-loop, rotate the mesh every frame
   // useFrame((state, delta) => (ref.current.rotation.x += 0.01));
@@ -73,10 +74,17 @@ function Box({
 
   const hexColor = mapMeshColor(color);
 
+  const newPosition = new Vector3(position[0], position[1], position[2]);
+
+  useFrame(({ clock }) => {
+    mesh.current.position.lerp(newPosition, 0.01);
+  });
+
   return (
     <mesh
       {...rest}
-      ref={ref}
+      position={position}
+      ref={mesh}
       scale={1}
     >
       <boxGeometry args={geometry} />
@@ -159,6 +167,10 @@ function BlockGrid({ blocks, onBlockClick }) {
         const { x, y, item } = block;
         const { type } = item;
 
+        if (type === 'empty') {
+          return null;
+        }
+
         const vec3 = vec3FromCoords({
           x,
           y,
@@ -203,9 +215,9 @@ function Scene({ blocks, onBlockClick }) {
       />
 
       <OrbitControls
-        enablePan={true}
-        enableZoom={true}
-        enableRotate={true}
+        enablePan={false}
+        enableZoom={false}
+        enableRotate={false}
       />
 
       <gridHelper args={[30, 30, colors.gray['800'], colors.gray['800']]} />
