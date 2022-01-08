@@ -1,5 +1,8 @@
 import React, { useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import {
+  Canvas,
+  // useFrame
+} from '@react-three/fiber';
 import classNames from 'classnames';
 import { useMachine } from '@xstate/react';
 import { OrthographicCamera, OrbitControls, useHelper } from '@react-three/drei';
