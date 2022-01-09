@@ -1,4 +1,6 @@
+import colors from 'tailwindcss/colors';
 import DataModel from "./Model";
+
 // const BLOCK_TYPES = [
 //     'lime',
 //     'red',
@@ -115,4 +117,56 @@ export function vec3FromCoords({ x, y, padding, width, height, matrixWidth, matr
     }
 
     return vec3;
+}
+
+export const mapMeshColor = (type) => {
+    return ({
+        'lime': colors.lime['500'],
+        'red': colors.red['500'],
+        'blue': colors.blue['500'],
+        'orange': colors.orange['500'],
+        'empty': colors.gray['500'],
+    })[type];
+};
+
+export const mapBackgroundColorClass = (type) => {
+    return {
+        'bg-lime-400': type === 'lime',
+        'bg-red-400': type === 'red',
+        'bg-blue-400': type === 'blue',
+        'bg-orange-400': type === 'orange',
+        'bg-gray-900': type === 'empty'
+    };
+};
+
+export const computeGoalRemaining = (goals, progress, type) => {
+    const goal = goals.find((g) => g.type === type);
+    if (!goal) return 0;
+    const current = progress[type] || 0;
+    return goal.count - current;
+};
+
+export function presentationModelFromDataModel(dataModel) {
+    const blocks = dataModel._list.map(({ x, y, item }) => {
+        const { type } = item;
+        const vec3 = vec3FromCoords({
+            x,
+            y,
+            padding: 0.2,
+            width: 1,
+            height: 1,
+            matrixWidth: 6,
+            matrixHeight: 6
+        });
+        return {
+            x,
+            y,
+            vec3,
+            type
+        };
+    });
+    const model = {
+        blocks
+    };
+    return model;
 }

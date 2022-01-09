@@ -1,24 +1,19 @@
-import React, { useRef } from 'react';
-import {
-  Canvas,
-  useFrame
-} from '@react-three/fiber';
+import React from 'react';
 import classNames from 'classnames';
-import { useMachine } from '@xstate/react';
-import { OrthographicCamera, OrbitControls, useHelper } from '@react-three/drei';
-import { createMachine } from 'xstate';
+import {useMachine} from '@xstate/react';
+import {createMachine} from 'xstate';
 // import { inspect } from '@xstate/inspect';
 import {
+  computeGoalRemaining,
   dataModelFromMatrix,
-  vec3FromCoords
+  mapBackgroundColorClass,
+  presentationModelFromDataModel
 } from './helpers';
+import Stage from './components/Stage';
+import WinLossOverlay from './components/WinLossOverlay';
 import machineConfig from './machine';
 import staticLevel from './level';
 import './App.css';
-
-import colors from 'tailwindcss/colors';
-import { Vector3, PointLightHelper } from 'three';
-
 
 // inspect({
 //   // options
@@ -34,208 +29,6 @@ const initialContext = {
 
 const gameMachine = createMachine(machineConfig);
 
-const mapBackgroundColorClass = (type) => {
-  return {
-    'bg-lime-400': type === 'lime',
-    'bg-red-400': type === 'red',
-    'bg-blue-400': type === 'blue',
-    'bg-orange-400': type === 'orange',
-    'bg-gray-900': type === 'empty'
-  };
-};
-
-const mapMeshColor = (type) => {
-  return ({
-    'lime': colors.lime['500'],
-    'red': colors.red['500'],
-    'blue': colors.blue['500'],
-    'orange': colors.orange['500'],
-    'empty': colors.gray['500'],
-  })[type];
-};
-
-const computeGoalRemaining = (goals, progress, type) => {
-  const goal = goals.find((g) => g.type === type);
-  if (!goal) return 0;
-  const current = progress[type] || 0;
-  return goal.count - current;
-};
-
-function Box({
-  geometry,
-  color,
-  position,
-  ...rest
-}) {
-
-  // reference gives us direct access to the THREE.Mesh object
-  const mesh = useRef();
-
-  // Subscribe this component to the render-loop, rotate the mesh every frame
-  // useFrame((state, delta) => (ref.current.rotation.x += 0.01));
-  // Return the view, these are regular Threejs elements expressed in JSX
-
-  const hexColor = mapMeshColor(color);
-
-  const newPosition = new Vector3(position[0], position[1], position[2]);
-
-  useFrame(({ clock }) => {
-    mesh.current.position.lerp(newPosition, 0.01);
-  });
-
-  return (
-    <mesh
-      {...rest}
-      position={position}
-      ref={mesh}
-      scale={1}
-    >
-      <boxGeometry args={geometry} />
-      <meshStandardMaterial color={hexColor} />
-    </mesh>
-  )
-}
-
-// const CameraDolly = ({ isZoom }) => {
-//   // const vec = new THREE.Vector3();
-
-//   useFrame((state) => {
-//     // const step = 0.1
-//     // const x = isZoom ? 0 : 5
-//     // const y = isZoom ? 10 : 5
-//     // const z = isZoom ? 10 : 5
-
-//     // console.log({ x, y, z });
-
-//     // state.camera.position.lerp(vec.set(x, y, z), step)
-//     console.log(state.camera.position)
-//     state.camera.lookAt(0, 0, 0);
-//     state.camera.updateProjectionMatrix();
-//   });
-
-//   return null;
-// }
-
-function Stage({ blocks, onBlockClick }) {
-  return (
-    <Canvas>
-      <Scene blocks={blocks} onBlockClick={onBlockClick} />
-    </Canvas>
-  );
-}
-
-function BlockGrid({ blocks, onBlockClick }) {
-  return (
-    <>
-      {blocks.map((block, rowIdx) => {
-
-        const { x, y, vec3, item, type } = block;
-
-        if (type === 'empty') {
-          return null;
-        }
-
-        return (
-          <Box
-            key={`${x}-${y}`}
-            position={vec3}
-            geometry={[1, 1, 1]}
-            color={type}
-            onClick={() => {
-              onBlockClick({ x, y })
-            }}
-          />
-        );
-      })}
-    </>
-  );
-}
-
-function Scene({ blocks, onBlockClick }) {
-
-  const cameraRef = useRef();
-  const pointLightRef = useRef();
-  useHelper(pointLightRef, PointLightHelper, 0.5, 'red');
-
-  return (
-    <>
-      <OrthographicCamera
-        ref={cameraRef}
-        makeDefault
-        zoom={55}
-        position={[
-          7, 10, 7
-        ]}
-      />
-
-      <OrbitControls
-        enablePan={false}
-        enableZoom={false}
-        enableRotate={false}
-      />
-
-      <gridHelper args={[30, 30, colors.gray['800'], colors.gray['800']]} />
-
-      <ambientLight />
-      <pointLight ref={pointLightRef} position={[0, 10, 30]} />
-
-      <BlockGrid blocks={blocks} onBlockClick={onBlockClick} />
-
-      {/* <CameraDolly isZoom={false} /> */}
-    </>
-  );
-}
-
-function WinLossOverlay({ state }) {
-  let title = 'Game Over';
-  if (state === 'WON') {
-    title = 'You Win!'
-  }
-  return (
-    <div
-      className='absolute top-0 bottom-0 left-0 right-0 bg-gray-900/90 flex justify-center items-center flex-col'
-    >
-      <div className='flex justify-center items-center font-medium text-gray-100 text-2xl uppercase mb-4'>
-        <span>{title}</span>
-      </div>
-      <div className='font-medium text-gray-100 uppercase'>
-        <button
-          className='bg-gray-900 hover:border-blue-400 text-gray-100 py-2 px-4 border border-gray-700 rounded shadow uppercase text-sm'
-          onClick={() => {
-            window.location.reload();
-          }}>
-          Play Again
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function presentationModelFromDataModel(dataModel) {
-  const blocks = dataModel._list.map(({ x, y, item }) => {
-    const { type } = item;
-    const vec3 = vec3FromCoords({
-      x,
-      y,
-      padding: 0.2,
-      width: 1,
-      height: 1,
-      matrixWidth: 6,
-      matrixHeight: 6
-    });
-    return {
-      x,
-      y,
-      vec3,
-      type
-    };
-  });
-  const model = {
-    blocks
-  };
-  return model;
-}
-
 export default function App() {
   const [state, send] = useMachine(gameMachine,
     {
@@ -247,10 +40,10 @@ export default function App() {
     });
   const { context } = state;
 
-  const presenentationModel
+  const presentationModel
     = presentationModelFromDataModel(context.model);
 
-  const { goals, progress, moves, model } = context;
+  const { goals, progress, moves } = context;
 
   return (
     <div className='p-2 pt-8 lg:pt-16 max-w-fit mx-auto'>
@@ -289,7 +82,7 @@ export default function App() {
           </div>
           <div className='p-4 border-solid border-2 border-gray-700 rounded relative' style={{ width: 600, height: 600 }}>
 
-            <Stage blocks={presenentationModel.blocks} onBlockClick={({ x, y }) => {
+            <Stage blocks={presentationModel.blocks} onBlockClick={({ x, y }) => {
               if (!state.matches('MATCHING')) { return; }
               send({
                 type: 'SELECT',
