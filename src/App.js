@@ -8,7 +8,10 @@ import { useMachine } from '@xstate/react';
 import { OrthographicCamera, OrbitControls, useHelper } from '@react-three/drei';
 import { createMachine } from 'xstate';
 // import { inspect } from '@xstate/inspect';
-import { modelFromMatrix as dataModelFromMatrix } from './helpers';
+import {
+  dataModelFromMatrix,
+  vec3FromCoords
+} from './helpers';
 import machineConfig from './machine';
 import staticLevel from './level';
 import './App.css';
@@ -112,44 +115,6 @@ function Box({
 
 //   return null;
 // }
-
-function vec3FromCoords({ x, y, padding, width, height, matrixWidth, matrixHeight }) {
-
-  const originX = (padding / 2) + (width / 2);
-  const originY = (padding / 2) + (height / 2);
-
-  const vec3 = [originX, height / 2, originY];
-
-  const offsetX = width + padding;
-  const midX = matrixWidth / 2;
-  let positionFromCenterX = (x % midX) + 1;
-
-  // handling blocks left of center
-  if (x < midX) {
-    positionFromCenterX = positionFromCenterX - (midX + 1);
-    vec3[0] = originX + (positionFromCenterX * offsetX);
-  }
-  // blocks right of center
-  else if (positionFromCenterX > 1) {
-    vec3[0] = originX + ((positionFromCenterX - 1) * offsetX);
-  }
-
-  const offsetY = height + padding;
-  const midY = matrixHeight / 2;
-  let positionFromCenterY = (y % midY) + 1;
-
-  // handling blocks top of center
-  if (y < midY) {
-    positionFromCenterY = positionFromCenterY - (midY + 1);
-    vec3[2] = originY + (positionFromCenterY * offsetY);
-  }
-  // blocks bottom of center
-  else if (positionFromCenterY > 1) {
-    vec3[2] = originY + ((positionFromCenterY - 1) * offsetY);
-  }
-
-  return vec3;
-}
 
 function Stage({ blocks, onBlockClick }) {
   return (
