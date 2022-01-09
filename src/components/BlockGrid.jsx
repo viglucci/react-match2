@@ -3,18 +3,19 @@ import Box from "./Box";
 export default function BlockGrid({ blocks, onBlockClick }) {
     return (
       <>
-        {blocks.map((block, rowIdx) => {
+        {blocks.map((block) => {
   
-          const { x, y, vec3, type } = block;
+          const { x, y, position, destination, type } = block;
   
           if (type === 'empty') {
             return null;
           }
-  
+
           return (
             <Box
               key={`${x}-${y}`}
-              position={vec3}
+              position={position}
+              destination={destination}
               geometry={[1, 1, 1]}
               color={type}
               onClick={() => {

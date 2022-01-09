@@ -1,4 +1,4 @@
-import {  assign } from 'xstate';
+import {assign} from 'xstate';
 
 const machineConfig = {
     id: 'gameMachine',
@@ -10,9 +10,9 @@ const machineConfig = {
                 IDLE: {
                     on: {
                         'SELECT': {
-                            target: 'SHIFTING',
+                            target: 'CONDITIONS',
                             actions: assign((context, event) => {
-                                const { goals, model } = context;
+                                const { goals, model, presentationModel } = context;
                                 let { moves } = context;
 
                                 const matched = model.getMatches({ x: event.x, y: event.y });
@@ -31,9 +31,8 @@ const machineConfig = {
                                     const goal = goals.find((g) => g.type === selectedItem.type);
                                     if (goal) {
                                         const matchCount = matched.length;
-                                        const newGoal = Math.max(0, goal.count - matchCount);
                                         // mutate the goal
-                                        goal.count = newGoal;
+                                        goal.count = Math.max(0, goal.count - matchCount);
                                     }
 
                                     matched.forEach((matchIdx) => {
@@ -41,8 +40,9 @@ const machineConfig = {
                                     });
                                 }
 
-                                // model.shift();
+                                model.shift();
                                 model.update();
+                                presentationModel.update(model);
 
                                 return {
                                     ...context,
@@ -53,27 +53,17 @@ const machineConfig = {
                         }
                     },
                 },
-                SHIFTING: {
-                    after: {
-                        300: 'CONDITIONS'
-                    },
-                    exit: [
-                        assign(({ model }) => {
-                            model.shift();
-                            model.update();
-                        })
-                    ] 
-                },
                 SPAWNING: {
                     after: {
                         200: 'IDLE'
                     },
                     exit: [
-                        assign(({ model, goals }) => {
+                        assign(({ model, presentationModel, goals }) => {
                             // only spawn in blocks which are part of the current goals
                             const allowedBlockTypes = goals.map(g => g.type);
                             model.spawn(allowedBlockTypes);
                             model.update();
+                            presentationModel.update(model);
                         })
                     ]
                 },

@@ -1,9 +1,14 @@
 import { coordsToListIndex, randomBlock, getConnectedCoords, isOnBoard } from "./helpers";
 
-class Model {
+class DataModel {
     _list = [];
     _matches = [];
     _dimensions = {};
+    _shifted = {};
+
+    getShifted() {
+        return this._shifted;
+    }
 
     getDimensions() {
         return this._dimensions;
@@ -33,12 +38,17 @@ class Model {
 
     shift() {
         const depths = {};
+        const shifted = {};
         for (let i = this._list.length - 1; i >= 0; i--) {
             const { x, y, item } = this._list[i];
             if (item.type !== 'empty') {
                 const deepestAvailable = depths[x] || -1;
                 if (deepestAvailable >= 0) {
                     const newListIdx = coordsToListIndex({ x, y: deepestAvailable }, this._dimensions.width);
+                    shifted[newListIdx] = {
+                        previous: { x, y },
+                        current: { x, y: deepestAvailable }
+                    };
                     this._list[newListIdx].item.type = item.type;
                     this._list[i].item.type = 'empty';
                     depths[x]--;
@@ -47,6 +57,7 @@ class Model {
                 depths[x] = Math.max(depths[x] || 0, y);
             }
         }
+        this._shifted = shifted;
     }
 
     spawn(blockTypes) {
@@ -120,4 +131,4 @@ class Model {
     }
 }
 
-export default Model;
+export default DataModel;

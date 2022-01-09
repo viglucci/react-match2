@@ -1,28 +1,28 @@
-import { useRef } from "react";
-import { mapMeshColor } from "../helpers";
-import { Vector3 } from "three";
-import { useFrame } from "@react-three/fiber";
+import {useRef} from "react";
+import {mapMeshColor} from "../helpers";
+import {Vector3} from "three";
+import {useFrame} from "@react-three/fiber";
 
-export default function Box({
-    geometry,
-    color,
-    position,
-    ...rest
-}) {
+export default function Box(props) {
+
+    const {
+        geometry,
+        color,
+        position,
+        destination,
+        ...rest
+    } = props;
 
     // reference gives us direct access to the THREE.Mesh object
     const mesh = useRef();
 
-    // Subscribe this component to the render-loop, rotate the mesh every frame
-    // useFrame((state, delta) => (ref.current.rotation.x += 0.01));
-    // Return the view, these are regular Threejs elements expressed in JSX
-
     const hexColor = mapMeshColor(color);
 
-    const newPosition = new Vector3(position[0], position[1], position[2]);
-
-    useFrame(({ clock }) => {
-        mesh.current.position.lerp(newPosition, 0.01);
+    // Subscribe this component to the render-loop and lerp between vec3
+    useFrame(({clock}) => {
+        mesh.current.position.lerp(
+            new Vector3(destination[0], destination[1], destination[2]),
+            0.1);
     });
 
     return (
@@ -32,8 +32,8 @@ export default function Box({
             ref={mesh}
             scale={1}
         >
-            <boxGeometry args={geometry} />
-            <meshStandardMaterial color={hexColor} />
+            <boxGeometry args={geometry}/>
+            <meshStandardMaterial color={hexColor}/>
         </mesh>
     )
 }

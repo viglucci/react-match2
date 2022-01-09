@@ -1,5 +1,6 @@
 import colors from 'tailwindcss/colors';
-import DataModel from "./Model";
+import DataModel from "./DataModel";
+import PresentationModel from "./PresentationModel";
 
 // const BLOCK_TYPES = [
 //     'lime',
@@ -148,8 +149,7 @@ export const computeGoalRemaining = (goals, progress, type) => {
 
 export function presentationModelFromDataModel(dataModel) {
     const blocks = dataModel._list.map(({ x, y, item }) => {
-        const { type } = item;
-        const vec3 = vec3FromCoords({
+        const position = vec3FromCoords({
             x,
             y,
             padding: 0.2,
@@ -158,15 +158,14 @@ export function presentationModelFromDataModel(dataModel) {
             matrixWidth: 6,
             matrixHeight: 6
         });
+        const { type } = item;
         return {
             x,
             y,
-            vec3,
+            position,
+            destination: position,
             type
         };
     });
-    const model = {
-        blocks
-    };
-    return model;
+    return new PresentationModel(blocks);
 }

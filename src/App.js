@@ -30,18 +30,18 @@ const initialContext = {
 const gameMachine = createMachine(machineConfig);
 
 export default function App() {
+  const dataModel = dataModelFromMatrix(staticLevel.matrix);
+  const presentationModel = presentationModelFromDataModel(dataModel);
   const [state, send] = useMachine(gameMachine,
     {
       context: {
         ...initialContext,
-        model: dataModelFromMatrix(staticLevel.matrix)
+        model: dataModel,
+        presentationModel: presentationModel
       },
       devTools: true,
     });
   const { context } = state;
-
-  const presentationModel
-    = presentationModelFromDataModel(context.model);
 
   const { goals, progress, moves } = context;
 
@@ -82,7 +82,7 @@ export default function App() {
           </div>
           <div className='p-4 border-solid border-2 border-gray-700 rounded relative' style={{ width: 600, height: 600 }}>
 
-            <Stage blocks={presentationModel.blocks} onBlockClick={({ x, y }) => {
+            <Stage blocks={context.presentationModel.getList()} onBlockClick={({ x, y }) => {
               if (!state.matches('MATCHING')) { return; }
               send({
                 type: 'SELECT',
