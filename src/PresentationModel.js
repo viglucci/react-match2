@@ -1,4 +1,5 @@
 import {coordsToListIndex, getConnectedCoords, vec3FromCoords} from "./helpers";
+import {data} from "autoprefixer";
 
 class PresentationModel {
     _list = [];
@@ -14,16 +15,22 @@ class PresentationModel {
     update(dataModel) {
         const blocks = dataModel.getList();
         const shifted = dataModel.getShifted();
+        const spawned = dataModel.getSpawned();
+
+        const translationConstants = {
+            padding: 0.2,
+            width: 1,
+            height: 1,
+            matrixWidth: 6,
+            matrixHeight: 6
+        };
+
         this._list = blocks.map(({ x, y, item }) => {
             const listIdx = coordsToListIndex({ x, y }, 6);
             let position = vec3FromCoords({
                 x,
                 y,
-                padding: 0.2,
-                width: 1,
-                height: 1,
-                matrixWidth: 6,
-                matrixHeight: 6
+                ...translationConstants
             });
             let destination = position;
 
@@ -31,12 +38,15 @@ class PresentationModel {
                 position = vec3FromCoords({
                     x: shifted[listIdx].previous.x,
                     y: shifted[listIdx].previous.y,
-                    padding: 0.2,
-                    width: 1,
-                    height: 1,
-                    matrixWidth: 6,
-                    matrixHeight: 6
+                    ...translationConstants
                 });
+            } else if(spawned.has(listIdx)) {
+                const spawnPoint = -5;
+                position = [
+                    position[0],
+                    position[1],
+                    spawnPoint + (y * (translationConstants.height + translationConstants.padding))
+                ];
             }
 
             const { type } = item;

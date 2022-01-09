@@ -5,9 +5,14 @@ class DataModel {
     _matches = [];
     _dimensions = {};
     _shifted = {};
+    _spawned = new Set();
 
     getShifted() {
         return this._shifted;
+    }
+
+    getSpawned() {
+        return this._spawned;
     }
 
     getDimensions() {
@@ -61,12 +66,15 @@ class DataModel {
     }
 
     spawn(blockTypes) {
+        const spawned = new Set();
         for (let i = this._list.length - 1; i >= 0; i--) {
             const { item } = this._list[i];
             if (item.type === 'empty') {
                 this._list[i].item = randomBlock(blockTypes);
+                spawned.add(i);
             }
         }
+        this._spawned = spawned;
     }
 
     _buildMatchesList() {
