@@ -1,4 +1,4 @@
-import Model from "./Model";
+import DataModel from "./Model";
 // const BLOCK_TYPES = [
 //     'lime',
 //     'red',
@@ -70,7 +70,7 @@ export function modelFromMatrix(matrix) {
         width: matrix[0].length,
     };
 
-    const model = new Model();
+    const model = new DataModel();
 
     model._dimensions = dimensions;
     model._list = buildFlatList(matrix, dimensions.width);

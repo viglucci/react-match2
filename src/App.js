@@ -8,7 +8,7 @@ import { useMachine } from '@xstate/react';
 import { OrthographicCamera, OrbitControls, useHelper } from '@react-three/drei';
 import { createMachine } from 'xstate';
 // import { inspect } from '@xstate/inspect';
-import { modelFromMatrix } from './helpers';
+import { modelFromMatrix as dataModelFromMatrix } from './helpers';
 import machineConfig from './machine';
 import staticLevel from './level';
 import './App.css';
@@ -164,22 +164,11 @@ function BlockGrid({ blocks, onBlockClick }) {
     <>
       {blocks.map((block, rowIdx) => {
 
-        const { x, y, item } = block;
-        const { type } = item;
+        const { x, y, vec3, item, type } = block;
 
         if (type === 'empty') {
           return null;
         }
-
-        const vec3 = vec3FromCoords({
-          x,
-          y,
-          padding: 0.2,
-          width: 1,
-          height: 1,
-          matrixWidth: 6,
-          matrixHeight: 6
-        });
 
         return (
           <Box
@@ -257,18 +246,46 @@ function WinLossOverlay({ state }) {
   );
 }
 
+function presentationModelFromDataModel(dataModel) {
+  const blocks = dataModel._list.map(({ x, y, item }) => {
+    const { type } = item;
+    const vec3 = vec3FromCoords({
+      x,
+      y,
+      padding: 0.2,
+      width: 1,
+      height: 1,
+      matrixWidth: 6,
+      matrixHeight: 6
+    });
+    return {
+      x,
+      y,
+      vec3,
+      type
+    };
+  });
+  const model = {
+    blocks
+  };
+  return model;
+}
+
 export default function App() {
   const [state, send] = useMachine(gameMachine,
     {
       context: {
         ...initialContext,
-        model: modelFromMatrix(staticLevel.matrix)
+        model: dataModelFromMatrix(staticLevel.matrix)
       },
       devTools: true,
     });
   const { context } = state;
+
+  const presenentationModel
+    = presentationModelFromDataModel(context.model);
+
   const { goals, progress, moves, model } = context;
-  const list = model.getList();
 
   return (
     <div className='p-2 pt-8 lg:pt-16 max-w-fit mx-auto'>
@@ -307,7 +324,7 @@ export default function App() {
           </div>
           <div className='p-4 border-solid border-2 border-gray-700 rounded relative' style={{ width: 600, height: 600 }}>
 
-            <Stage blocks={list} onBlockClick={({ x, y }) => {
+            <Stage blocks={presenentationModel.blocks} onBlockClick={({ x, y }) => {
               if (!state.matches('MATCHING')) { return; }
               send({
                 type: 'SELECT',
