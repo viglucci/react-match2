@@ -1,8 +1,8 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import classNames from 'classnames';
 import {useMachine} from '@xstate/react';
 import {createMachine} from 'xstate';
-import {inspect} from '@xstate/inspect';
+// import {inspect} from '@xstate/inspect';
 import {
     computeGoalRemaining,
     dataModelFromMatrix,
@@ -15,11 +15,11 @@ import machineConfig from './machine';
 import staticLevel from './level';
 import './App.css';
 
-inspect({
-    // options
-    // url: 'https://statecharts.io/inspect', // (default)
-    iframe: false // open in new window
-});
+// inspect({
+//     // options
+//     // url: 'https://statecharts.io/inspect', // (default)
+//     iframe: false // open in new window
+// });
 
 const initialContext = {
     moves: staticLevel.moves,
@@ -29,6 +29,7 @@ const initialContext = {
 
 const dataModel = dataModelFromMatrix(staticLevel.matrix);
 const presentationModel = presentationModelFromDataModel(dataModel);
+
 const gameMachine = createMachine({
     ...machineConfig,
     context: {
@@ -39,12 +40,18 @@ const gameMachine = createMachine({
 });
 
 export default function App() {
-    const [state, send] = useMachine(
-        gameMachine,
-        {
-            devTools: true,
-        });
+    const [state, send]
+        = useMachine(gameMachine, { devTools: true });
     const {context} = state;
+
+    useEffect(() => {
+        const sub = context.model.events.subscribe((e) => {
+            context.presentationModel.handleEvent(e);
+        });
+        return () => {
+            sub.unsubscribe();
+        };
+    }, [context.presentationModel, context.model.events]);
 
     const {goals, progress, moves} = context;
 

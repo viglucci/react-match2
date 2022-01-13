@@ -18,7 +18,8 @@ export default function Scene({ blocks, onBlockClick }) {
                 makeDefault
                 zoom={55}
                 position={[
-                    7, 10, 7
+                    // 0, 100, 7
+                    7, 7, 7
                 ]}
             />
 

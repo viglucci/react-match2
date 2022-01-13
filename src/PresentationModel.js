@@ -1,23 +1,21 @@
-import {coordsToListIndex, getConnectedCoords, vec3FromCoords} from "./helpers";
-import {data} from "autoprefixer";
+import {calcSpawnZ, coordsToListIndex, vec3FromCoords} from "./helpers";
+import {tap} from "rxjs";
 
 class PresentationModel {
     _list = [];
+    _map = {};
 
-    constructor(list) {
+    constructor(list, map) {
         this._list = list;
+        this._map = map;
     }
 
     getList() {
         return this._list;
     }
 
-    update(dataModel) {
-        const blocks = dataModel.getList();
-        const shifted = dataModel.getShifted();
-        const spawned = dataModel.getSpawned();
-
-        const translationConstants = {
+    handleEvent(event) {
+        const conversionConstants = {
             padding: 0.2,
             width: 1,
             height: 1,
@@ -25,39 +23,63 @@ class PresentationModel {
             matrixHeight: 6
         };
 
-        this._list = blocks.map(({ x, y, item }) => {
-            const listIdx = coordsToListIndex({ x, y }, 6);
-            let position = vec3FromCoords({
-                x,
-                y,
-                ...translationConstants
-            });
-            let destination = position;
-
-            if (shifted[listIdx]) {
-                position = vec3FromCoords({
-                    x: shifted[listIdx].previous.x,
-                    y: shifted[listIdx].previous.y,
-                    ...translationConstants
-                });
-            } else if(spawned.has(listIdx)) {
-                const spawnPoint = -5;
-                position = [
-                    position[0],
-                    position[1],
-                    spawnPoint + (y * (translationConstants.height + translationConstants.padding))
-                ];
+        switch (event.type) {
+            case 'REMOVED': {
+                delete this._map[event.data.block.id];
+                break;
             }
+            case 'SHIFTED': {
+                this._map[event.data.block.id].position = vec3FromCoords({
+                    x: event.data.current.x,
+                    y: event.data.current.y,
+                    ...conversionConstants
+                });
+                this._map[event.data.block.id].nextPosition
+                    = this._map[event.data.block.id].position;
+                this._map[event.data.block.id].x = event.data.current.x;
+                this._map[event.data.block.id].y = event.data.current.y;
+                break;
+            }
+            case 'SPAWNED': {
 
-            const { type } = item;
+                const nextPosition = vec3FromCoords({
+                    x: event.data.x,
+                    y: event.data.y,
+                    ...conversionConstants
+                });
 
-            return {
-                x,
-                y,
-                position,
-                destination,
-                type
-            };
+                const position = [
+                    nextPosition[0],
+                    nextPosition[1],
+                    calcSpawnZ({
+                        y: event.data.y,
+                        ...conversionConstants
+                    })
+                ];
+
+                console.log({
+                    ...event.data,
+                    nextPosition,
+                    position
+                });
+
+                this._map[event.data.block.id] = {
+                    state: "spawning",
+                    position,
+                    nextPosition,
+                    ...{...event.data.block},
+                    x: event.data.x,
+                    y: event.data.y,
+                };
+                break;
+            }
+            default: {
+                console.warn('unhandled event', event);
+            }
+        }
+
+        this._list = Object.keys(this._map).map((id) => {
+            return this._map[id];
         });
     }
 }

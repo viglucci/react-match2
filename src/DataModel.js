@@ -1,19 +1,11 @@
-import { coordsToListIndex, randomBlock, getConnectedCoords, isOnBoard } from "./helpers";
+import {coordsToListIndex, getConnectedCoords, isOnBoard, listIndexToCoords, randomBlock} from "./helpers";
+import {Subject} from "rxjs";
 
 class DataModel {
     _list = [];
     _matches = [];
     _dimensions = {};
-    _shifted = {};
-    _spawned = new Set();
-
-    getShifted() {
-        return this._shifted;
-    }
-
-    getSpawned() {
-        return this._spawned;
-    }
+    events = new Subject();
 
     getDimensions() {
         return this._dimensions;
@@ -33,71 +25,88 @@ class DataModel {
         return this._list[listIdx];
     }
 
-    remove(index) {
-        this._list[index].item.type = 'empty';
-    }
-
     update() {
         this._matches = this._buildMatchesList();
     }
 
+    remove(index) {
+        this.events.next({
+            type: "REMOVED",
+            data: {
+                ...this._list[index]
+            }
+        });
+        this._list[index].block = null;
+    }
+
     shift() {
         const depths = {};
-        const shifted = {};
         for (let i = this._list.length - 1; i >= 0; i--) {
-            const { x, y, item } = this._list[i];
-            if (item.type !== 'empty') {
+            const { x, y, block } = this._list[i];
+            if (block) {
                 const deepestAvailable = depths[x] || -1;
                 if (deepestAvailable >= 0) {
                     const newListIdx = coordsToListIndex({ x, y: deepestAvailable }, this._dimensions.width);
-                    shifted[newListIdx] = {
-                        previous: { x, y },
-                        current: { x, y: deepestAvailable }
+                    this.events.next({
+                        type: 'SHIFTED',
+                        data: {
+                            previous: { x, y },
+                            current: { x, y: deepestAvailable },
+                            block
+                        }
+                    });
+                    this._list[newListIdx].block = {
+                        ...block
                     };
-                    this._list[newListIdx].item.type = item.type;
-                    this._list[i].item.type = 'empty';
+                    this._list[i].block = null;
                     depths[x]--;
                 }
             } else {
                 depths[x] = Math.max(depths[x] || 0, y);
             }
         }
-        this._shifted = shifted;
     }
 
     spawn(blockTypes) {
-        const spawned = new Set();
         for (let i = this._list.length - 1; i >= 0; i--) {
-            const { item } = this._list[i];
-            if (item.type === 'empty') {
-                this._list[i].item = randomBlock(blockTypes);
-                spawned.add(i);
+            const { block } = this._list[i];
+            if (!block) {
+                const newBlock = randomBlock(blockTypes);
+                this._list[i].block = newBlock;
+                const { x, y } = listIndexToCoords(i, this.getDimensions().width);
+                this.events.next({
+                    type: 'SPAWNED',
+                    data: {
+                        x,
+                        y,
+                        block: newBlock
+                    }
+                });
             }
         }
-        this._spawned = spawned;
     }
 
     _buildMatchesList() {
-        function areSameType(subject, observed) {
-            return subject
-                && subject.item.type === observed.item.type;
+        function areSameType(a, b) {
+            return a.type === b.type;
         }
 
         const adjacentsOfType = [];
         const adjacencyList = [];
-        this._list.forEach((item) => {
-            const cellIndex = coordsToListIndex(item, this._dimensions.width);
+        this._list.forEach((cell) => {
+            const cellIndex = coordsToListIndex(cell, this._dimensions.width);
 
             adjacencyList[cellIndex] = adjacencyList[cellIndex] || [];
             adjacentsOfType[cellIndex] = adjacentsOfType[cellIndex] || [];
 
-            const { top, right, bottom, left } = getConnectedCoords(item);
+            const { top, right, bottom, left } = getConnectedCoords(cell);
 
             [top, right, bottom, left].forEach((adjacent) => {
                 if (isOnBoard(adjacent, this._dimensions)) {
                     const adjacentIndex = coordsToListIndex(adjacent, this._dimensions.width);
                     adjacencyList[cellIndex].push(adjacentIndex);
-                    if (areSameType(this._list[adjacentIndex], item)) {
+                    const adajacent = this._list[adjacentIndex];
+                    if (adajacent.block && cell.block && areSameType(adajacent.block, cell.block)) {
                         adjacentsOfType[cellIndex].push(adjacentIndex);
                     }
                 }

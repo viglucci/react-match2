@@ -1,5 +1,5 @@
 const level = {
-    moves: 10,
+    moves: 100,
     goals: [
         {
             type: "blue",

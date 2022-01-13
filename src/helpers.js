@@ -1,6 +1,8 @@
 import colors from 'tailwindcss/colors';
 import DataModel from "./DataModel";
 import PresentationModel from "./PresentationModel";
+import { v4 as _uuid } from '@lukeed/uuid';
+import {of} from "rxjs";
 
 // const BLOCK_TYPES = [
 //     'lime',
@@ -9,11 +11,17 @@ import PresentationModel from "./PresentationModel";
 //     'orange'
 // ];
 
+// let incrementingId = 0;
+export function uuid() {
+    // return incrementingId++;
+    return _uuid();
+}
+
 function visitEach(matrix, cb) {
     for (let j = 0; j < matrix.length; j++) {
         for (let i = 0; i < matrix[0].length; i++) {
-            const item = matrix[j][i];
-            cb({ x: i, y: j, item });
+            const block = matrix[j][i];
+            cb({ x: i, y: j, block });
         }
     }
 }
@@ -39,9 +47,10 @@ export function isOnBoard({ x, y }, { width, height }) {
 }
 
 export const randomBlock = (allowedBlocks) => {
-    const randomtype = allowedBlocks[Math.floor(Math.random() * allowedBlocks.length)];
+    const randomType = allowedBlocks[Math.floor(Math.random() * allowedBlocks.length)];
     return {
-        type: randomtype
+        id: uuid(),
+        type: randomType
     };
 };
 
@@ -56,12 +65,16 @@ export function listIndexToCoords(index, width) {
     };
 }
 
-
 export function buildFlatList(matrix, width) {
     const list = [];
-    visitEach(matrix, ({ x, y, item }) => {
+    visitEach(matrix, ({ x, y, block }) => {
         const index = coordsToListIndex({ x, y, }, width);
-        list[index] = { x, y, item };
+        block.id = uuid();
+        list[index] = {
+            x,
+            y,
+            block
+        };
     });
     return list;
 }
@@ -82,12 +95,10 @@ export function dataModelFromMatrix(matrix) {
     return model;
 }
 
-export function vec3FromCoords({ x, y, padding, width, height, matrixWidth, matrixHeight }) {
+export function vec3XFromCoords({ x, padding, width, matrixWidth }) {
 
     const originX = (padding / 2) + (width / 2);
-    const originY = (padding / 2) + (height / 2);
-
-    const vec3 = [originX, height / 2, originY];
+    let result = originX;
 
     const offsetX = width + padding;
     const midX = matrixWidth / 2;
@@ -96,12 +107,20 @@ export function vec3FromCoords({ x, y, padding, width, height, matrixWidth, matr
     // handling blocks left of center
     if (x < midX) {
         positionFromCenterX = positionFromCenterX - (midX + 1);
-        vec3[0] = originX + (positionFromCenterX * offsetX);
+        result = originX + (positionFromCenterX * offsetX);
     }
     // blocks right of center
     else if (positionFromCenterX > 1) {
-        vec3[0] = originX + ((positionFromCenterX - 1) * offsetX);
+        result = originX + ((positionFromCenterX - 1) * offsetX);
     }
+
+    return result;
+}
+
+export function vec3ZFromCoords({ y, padding, height, matrixHeight }) {
+
+    const originY = (padding / 2) + (height / 2);
+    let result = originY;
 
     const offsetY = height + padding;
     const midY = matrixHeight / 2;
@@ -110,14 +129,32 @@ export function vec3FromCoords({ x, y, padding, width, height, matrixWidth, matr
     // handling blocks top of center
     if (y < midY) {
         positionFromCenterY = positionFromCenterY - (midY + 1);
-        vec3[2] = originY + (positionFromCenterY * offsetY);
+        result = originY + (positionFromCenterY * offsetY);
     }
     // blocks bottom of center
     else if (positionFromCenterY > 1) {
-        vec3[2] = originY + ((positionFromCenterY - 1) * offsetY);
+        result = originY + ((positionFromCenterY - 1) * offsetY);
     }
 
+    return result;
+}
+
+export function vec3FromCoords({ x, y, padding, width, height, matrixWidth, matrixHeight }) {
+
+    const originX = (padding / 2) + (width / 2);
+    const originY = (padding / 2) + (height / 2);
+
+    const vec3 = [originX, height / 2, originY];
+
+    vec3[0] = vec3XFromCoords({ x, padding, width, matrixWidth});
+
+    vec3[2] = vec3ZFromCoords({ y, padding, height, matrixHeight });
+
     return vec3;
+}
+
+export function calcSpawnZ({ y, padding, height, matrixHeight }) {
+    return vec3ZFromCoords({ y, padding, height, matrixHeight });
 }
 
 export const mapMeshColor = (type) => {
@@ -148,7 +185,10 @@ export const computeGoalRemaining = (goals, progress, type) => {
 };
 
 export function presentationModelFromDataModel(dataModel) {
-    const blocks = dataModel._list.map(({ x, y, item }) => {
+
+    const blocks = dataModel._list.map((entry) => {
+
+        const { x, y, block } = entry;
         const position = vec3FromCoords({
             x,
             y,
@@ -158,14 +198,20 @@ export function presentationModelFromDataModel(dataModel) {
             matrixWidth: 6,
             matrixHeight: 6
         });
-        const { type } = item;
+
         return {
             x,
             y,
             position,
             destination: position,
-            type
+            ...block
         };
     });
-    return new PresentationModel(blocks);
+
+    const map = blocks.reduce((m, block) => {
+        m[block.id] = block;
+        return m;
+    }, {});
+
+    return new PresentationModel(blocks, map);
 }

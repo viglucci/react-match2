@@ -1,29 +1,86 @@
 import Box from "./Box";
+import {assign, createMachine} from "xstate";
+import {useMachine} from "@xstate/react";
+import {useEffect} from "react";
 
-export default function BlockGrid({ blocks, onBlockClick }) {
+const boxMachine = createMachine({
+    id: "boxMachine",
+    initial: "SPAWNING",
+    context: {},
+    states: {
+        IDLE: {},
+        SPAWNING: {
+            after: {
+                1000: { target: 'IDLE' }
+            },
+            exit: [
+                assign({
+                    position: (ctx) => {
+                        return ctx.nextPosition || ctx.position;
+                    }
+                })
+            ]
+        },
+    },
+    on: {
+        'POSITION_UPDATE': {
+            actions: [
+                assign({
+                    position: (ctx, event) => {
+                        return event.position;
+                    }
+                })
+            ]
+        }
+    }
+});
+
+function BoxContainer({children, position, nextPosition}) {
+    const [state, send] = useMachine(boxMachine, {
+        context: {
+            position,
+            nextPosition
+        }
+    });
+
+    useEffect(() => {
+        send({
+            type: 'POSITION_UPDATE',
+            position
+        });
+    }, [send, position]);
+
+    return children({
+        position: state.context.position
+    });
+}
+
+export default function BlockGrid({blocks, onBlockClick}) {
     return (
-      <>
-        {blocks.map((block) => {
-  
-          const { x, y, position, destination, type } = block;
-  
-          if (type === 'empty') {
-            return null;
-          }
+        <>
+            {blocks.map((block) => {
 
-          return (
-            <Box
-              key={`${x}-${y}`}
-              position={position}
-              destination={destination}
-              geometry={[1, 1, 1]}
-              color={type}
-              onClick={() => {
-                onBlockClick({ x, y })
-              }}
-            />
-          );
-        })}
-      </>
+                const {x, y, position, nextPosition, type, id} = block;
+
+                return (
+                    <BoxContainer
+                        key={id}
+                        position={position}
+                        nextPosition={nextPosition}
+                    >
+                        {({position: desiredPosition}) => (
+                            <Box
+                                position={desiredPosition}
+                                geometry={[1, 1, 1]}
+                                color={type}
+                                onClick={() => {
+                                    onBlockClick({x, y})
+                                }}
+                            />
+                        )}
+                    </BoxContainer>
+                );
+            })}
+        </>
     );
-  }
+}

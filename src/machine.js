@@ -12,14 +12,14 @@ const machineConfig = {
                         'SELECT': {
                             target: 'CONDITIONS',
                             actions: assign((context, event) => {
-                                const { goals, model, presentationModel } = context;
+                                const { goals, model } = context;
                                 let { moves } = context;
 
                                 const matched = model.getMatches({ x: event.x, y: event.y });
 
-                                const { item: selectedItem } = model.getItem({ x: event.x, y: event.y });
+                                const { block: selectedItem } = model.getItem({ x: event.x, y: event.y });
 
-                                if (selectedItem.type === 'empty') {
+                                if (selectedItem === 'empty') {
                                     return;
                                 }
 
@@ -42,7 +42,7 @@ const machineConfig = {
 
                                 model.shift();
                                 model.update();
-                                presentationModel.update(model);
+                                // presentationModel.update(model);
 
                                 return {
                                     ...context,
@@ -58,12 +58,11 @@ const machineConfig = {
                         200: 'IDLE'
                     },
                     exit: [
-                        assign(({ model, presentationModel, goals }) => {
+                        assign(({ model, goals }) => {
                             // only spawn in blocks which are part of the current goals
                             const allowedBlockTypes = goals.map(g => g.type);
                             model.spawn(allowedBlockTypes);
                             model.update();
-                            presentationModel.update(model);
                         })
                     ]
                 },
