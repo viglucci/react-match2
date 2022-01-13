@@ -2,7 +2,6 @@ import colors from 'tailwindcss/colors';
 import DataModel from "./DataModel";
 import PresentationModel from "./PresentationModel";
 import { v4 as _uuid } from '@lukeed/uuid';
-import {of} from "rxjs";
 
 // const BLOCK_TYPES = [
 //     'lime',

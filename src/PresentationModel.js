@@ -1,5 +1,4 @@
-import {calcSpawnZ, coordsToListIndex, vec3FromCoords} from "./helpers";
-import {tap} from "rxjs";
+import {calcSpawnZ, vec3FromCoords} from "./helpers";
 
 class PresentationModel {
     _list = [];
