@@ -5,22 +5,10 @@ import {useEffect} from "react";
 
 const boxMachine = createMachine({
     id: "boxMachine",
-    initial: "SPAWNING",
+    initial: "IDLE",
     context: {},
     states: {
         IDLE: {},
-        SPAWNING: {
-            after: {
-                1000: { target: 'IDLE' }
-            },
-            exit: [
-                assign({
-                    position: (ctx) => {
-                        return ctx.nextPosition || ctx.position;
-                    }
-                })
-            ]
-        },
     },
     on: {
         'POSITION_UPDATE': {
@@ -35,11 +23,10 @@ const boxMachine = createMachine({
     }
 });
 
-function BoxContainer({children, position, nextPosition}) {
+function BoxContainer({children, position}) {
     const [state, send] = useMachine(boxMachine, {
         context: {
-            position,
-            nextPosition
+            position
         }
     });
 

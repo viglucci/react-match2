@@ -28,44 +28,44 @@ class PresentationModel {
                 break;
             }
             case 'SHIFTED': {
-                this._map[event.data.block.id].position = vec3FromCoords({
+                const blockId = event.data.block.id;
+                this._map[blockId].position = vec3FromCoords({
                     x: event.data.current.x,
                     y: event.data.current.y,
                     ...conversionConstants
                 });
-                this._map[event.data.block.id].nextPosition
-                    = this._map[event.data.block.id].position;
-                this._map[event.data.block.id].x = event.data.current.x;
-                this._map[event.data.block.id].y = event.data.current.y;
+                this._map[blockId].x = event.data.current.x;
+                this._map[blockId].y = event.data.current.y;
                 break;
             }
             case 'SPAWNED': {
 
-                const nextPosition = vec3FromCoords({
+                const [x, y] = vec3FromCoords({
                     x: event.data.x,
                     y: event.data.y,
                     ...conversionConstants
                 });
 
+                const z = calcSpawnZ({
+                    y: event.data.y,
+                    ...conversionConstants
+                });
+
                 const position = [
-                    nextPosition[0],
-                    nextPosition[1],
-                    calcSpawnZ({
-                        y: event.data.y,
-                        ...conversionConstants
-                    })
+                    x,
+                    y,
+                    z
                 ];
 
-                console.log({
-                    ...event.data,
-                    nextPosition,
-                    position
-                });
+                // console.log({
+                //     ...event.data,
+                //     nextPosition,
+                //     position
+                // });
 
                 this._map[event.data.block.id] = {
                     state: "spawning",
                     position,
-                    nextPosition,
                     ...{...event.data.block},
                     x: event.data.x,
                     y: event.data.y,

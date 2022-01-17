@@ -3,15 +3,15 @@ const level = {
     goals: [
         {
             type: "blue",
-            count: 12,
+            count: 120,
         },
         {
             type: "lime",
-            count: 20,
+            count: 200,
         },
         {
             type: "red",
-            count: 8,
+            count: 80,
         }
     ],
     matrix:

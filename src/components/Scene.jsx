@@ -24,9 +24,9 @@ export default function Scene({ blocks, onBlockClick }) {
             />
 
             <OrbitControls
-                enablePan={false}
-                enableZoom={false}
-                enableRotate={false}
+                enablePan={true}
+                enableZoom={true}
+                enableRotate={true}
             />
 
             <gridHelper args={[30, 30, colors.gray['800'], colors.gray['800']]} />

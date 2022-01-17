@@ -1,7 +1,7 @@
 import colors from 'tailwindcss/colors';
 import DataModel from "./DataModel";
 import PresentationModel from "./PresentationModel";
-import { v4 as _uuid } from '@lukeed/uuid';
+import {v4 as _uuid} from '@lukeed/uuid';
 
 // const BLOCK_TYPES = [
 //     'lime',
@@ -118,8 +118,8 @@ export function vec3XFromCoords({ x, padding, width, matrixWidth }) {
 
 export function vec3ZFromCoords({ y, padding, height, matrixHeight }) {
 
-    const originY = (padding / 2) + (height / 2);
-    let result = originY;
+    const originZ = (padding / 2) + (height / 2);
+    let result = originZ;
 
     const offsetY = height + padding;
     const midY = matrixHeight / 2;
@@ -128,11 +128,11 @@ export function vec3ZFromCoords({ y, padding, height, matrixHeight }) {
     // handling blocks top of center
     if (y < midY) {
         positionFromCenterY = positionFromCenterY - (midY + 1);
-        result = originY + (positionFromCenterY * offsetY);
+        result = originZ + (positionFromCenterY * offsetY);
     }
     // blocks bottom of center
     else if (positionFromCenterY > 1) {
-        result = originY + ((positionFromCenterY - 1) * offsetY);
+        result = originZ + ((positionFromCenterY - 1) * offsetY);
     }
 
     return result;
@@ -153,7 +153,10 @@ export function vec3FromCoords({ x, y, padding, width, height, matrixWidth, matr
 }
 
 export function calcSpawnZ({ y, padding, height, matrixHeight }) {
-    return vec3ZFromCoords({ y, padding, height, matrixHeight });
+    const zeroZ = vec3ZFromCoords({ y: 0, padding, height, matrixHeight });
+    const offsetY = height + padding;
+    const thisOffset = ((matrixHeight - y) * offsetY);
+    return (zeroZ - thisOffset);
 }
 
 export const mapMeshColor = (type) => {
