@@ -1,27 +1,5 @@
 import Box from "./Box";
-import {assign, createMachine} from "xstate";
-import {useActor, useMachine} from "@xstate/react";
-import {useEffect} from "react";
-
-const boxMachine = createMachine({
-    id: "boxMachine",
-    initial: "IDLE",
-    context: {},
-    states: {
-        IDLE: {},
-    },
-    on: {
-        'POSITION_UPDATE': {
-            actions: [
-                assign({
-                    position: (ctx, event) => {
-                        return event.position;
-                    }
-                })
-            ]
-        }
-    }
-});
+import {useActor} from "@xstate/react";
 
 function BoxContainer({children, machine}) {
     const [state] = useActor(machine);
