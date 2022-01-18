@@ -106,7 +106,7 @@ export default function App() {
                             <span className='font-medium text-gray-100 text-4xl uppercase'>{moves}</span>
                         </div>
                     </div>
-                    <div className='p-4 border-solid border-2 border-gray-700 rounded relative'
+                    <div className='max-w-full p-4 border-solid border-2 border-gray-700 rounded relative'
                          style={{width: 600, height: 600}}>
 
                         <Stage
@@ -120,7 +120,8 @@ export default function App() {
                                     x,
                                     y
                                 })
-                            }}/>
+                            }}
+                        />
 
                         {state.matches('WON') || state.matches('LOST')
                             ? <WinLossOverlay state={state.value}/>
