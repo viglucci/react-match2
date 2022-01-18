@@ -1,6 +1,5 @@
 import colors from 'tailwindcss/colors';
 import DataModel from "./DataModel";
-import PresentationModel from "./PresentationModel";
 import {v4 as _uuid} from '@lukeed/uuid';
 
 // const BLOCK_TYPES = [
@@ -186,7 +185,7 @@ export const computeGoalRemaining = (goals, progress, type) => {
 
 export function presentationModelFromDataModel(dataModel) {
 
-    const blocks = dataModel._list.map((entry) => {
+    const list = dataModel._list.map((entry) => {
         const {x, y, block} = entry;
         return {
             x,
@@ -195,10 +194,13 @@ export function presentationModelFromDataModel(dataModel) {
         };
     });
 
-    const map = blocks.reduce((m, block) => {
+    const map = list.reduce((m, block) => {
         m[block.id] = block;
         return m;
     }, {});
 
-    return new PresentationModel(blocks, map);
+    return {
+        list,
+        map
+    };
 }

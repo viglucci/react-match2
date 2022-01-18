@@ -50,8 +50,8 @@ export default function App() {
     const [viewState, sendViewMachine]
         = useMachine(viewMachine, {
             context: {
-                map: presentationModel._map,
-                list: presentationModel._list
+                map: presentationModel.map,
+                list: presentationModel.list
             }
         });
 
