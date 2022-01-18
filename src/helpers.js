@@ -10,9 +10,7 @@ import {v4 as _uuid} from '@lukeed/uuid';
 //     'orange'
 // ];
 
-// let incrementingId = 0;
 export function uuid() {
-    // return incrementingId++;
     return _uuid();
 }
 
@@ -20,16 +18,16 @@ function visitEach(matrix, cb) {
     for (let j = 0; j < matrix.length; j++) {
         for (let i = 0; i < matrix[0].length; i++) {
             const block = matrix[j][i];
-            cb({ x: i, y: j, block });
+            cb({x: i, y: j, block});
         }
     }
 }
 
-export function getConnectedCoords({ x, y }) {
-    const top = { x: x, y: y - 1 };
-    const right = { x: x + 1, y };
-    const bottom = { x: x, y: y + 1 };
-    const left = { x: x - 1, y };
+export function getConnectedCoords({x, y}) {
+    const top = {x: x, y: y - 1};
+    const right = {x: x + 1, y};
+    const bottom = {x: x, y: y + 1};
+    const left = {x: x - 1, y};
     return {
         top,
         bottom,
@@ -38,7 +36,7 @@ export function getConnectedCoords({ x, y }) {
     };
 }
 
-export function isOnBoard({ x, y }, { width, height }) {
+export function isOnBoard({x, y}, {width, height}) {
     return y >= 0 &&
         y < height &&
         x >= 0 &&
@@ -53,7 +51,7 @@ export const randomBlock = (allowedBlocks) => {
     };
 };
 
-export function coordsToListIndex({ x, y }, width) {
+export function coordsToListIndex({x, y}, width) {
     return x + (y * width);
 }
 
@@ -66,8 +64,8 @@ export function listIndexToCoords(index, width) {
 
 export function buildFlatList(matrix, width) {
     const list = [];
-    visitEach(matrix, ({ x, y, block }) => {
-        const index = coordsToListIndex({ x, y, }, width);
+    visitEach(matrix, ({x, y, block}) => {
+        const index = coordsToListIndex({x, y,}, width);
         block.id = uuid();
         list[index] = {
             x,
@@ -94,7 +92,7 @@ export function dataModelFromMatrix(matrix) {
     return model;
 }
 
-export function vec3XFromCoords({ x, padding, width, matrixWidth }) {
+export function vec3XFromCoords({x, padding, width, matrixWidth}) {
 
     const originX = (padding / 2) + (width / 2);
     let result = originX;
@@ -116,7 +114,7 @@ export function vec3XFromCoords({ x, padding, width, matrixWidth }) {
     return result;
 }
 
-export function vec3ZFromCoords({ y, padding, height, matrixHeight }) {
+export function vec3ZFromCoords({y, padding, height, matrixHeight}) {
 
     const originZ = (padding / 2) + (height / 2);
     let result = originZ;
@@ -138,22 +136,22 @@ export function vec3ZFromCoords({ y, padding, height, matrixHeight }) {
     return result;
 }
 
-export function vec3FromCoords({ x, y, padding, width, height, matrixWidth, matrixHeight }) {
+export function vec3FromCoords({x, y, padding, width, height, matrixWidth, matrixHeight}) {
 
     const originX = (padding / 2) + (width / 2);
     const originY = (padding / 2) + (height / 2);
 
     const vec3 = [originX, height / 2, originY];
 
-    vec3[0] = vec3XFromCoords({ x, padding, width, matrixWidth});
+    vec3[0] = vec3XFromCoords({x, padding, width, matrixWidth});
 
-    vec3[2] = vec3ZFromCoords({ y, padding, height, matrixHeight });
+    vec3[2] = vec3ZFromCoords({y, padding, height, matrixHeight});
 
     return vec3;
 }
 
-export function calcSpawnZ({ y, padding, height, matrixHeight }) {
-    const zeroZ = vec3ZFromCoords({ y: 0, padding, height, matrixHeight });
+export function calcSpawnZ({y, padding, height, matrixHeight}) {
+    const zeroZ = vec3ZFromCoords({y: 0, padding, height, matrixHeight});
     const offsetY = height + padding;
     const thisOffset = ((matrixHeight - y) * offsetY);
     return (zeroZ - thisOffset);
@@ -189,23 +187,10 @@ export const computeGoalRemaining = (goals, progress, type) => {
 export function presentationModelFromDataModel(dataModel) {
 
     const blocks = dataModel._list.map((entry) => {
-
-        const { x, y, block } = entry;
-        const position = vec3FromCoords({
-            x,
-            y,
-            padding: 0.2,
-            width: 1,
-            height: 1,
-            matrixWidth: 6,
-            matrixHeight: 6
-        });
-
+        const {x, y, block} = entry;
         return {
             x,
             y,
-            position,
-            destination: position,
             ...block
         };
     });

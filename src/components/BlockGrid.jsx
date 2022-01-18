@@ -1,6 +1,6 @@
 import Box from "./Box";
 import {assign, createMachine} from "xstate";
-import {useMachine} from "@xstate/react";
+import {useActor, useMachine} from "@xstate/react";
 import {useEffect} from "react";
 
 const boxMachine = createMachine({
@@ -23,23 +23,12 @@ const boxMachine = createMachine({
     }
 });
 
-function BoxContainer({children, position}) {
-    const [state, send] = useMachine(boxMachine, {
-        context: {
-            position
-        }
-    });
+function BoxContainer({children, machine}) {
+    const [state] = useActor(machine);
+    const {context} = state;
+    const {position} = context;
 
-    useEffect(() => {
-        send({
-            type: 'POSITION_UPDATE',
-            position
-        });
-    }, [send, position]);
-
-    return children({
-        position: state.context.position
-    });
+    return children({position});
 }
 
 export default function BlockGrid({blocks, onBlockClick}) {
@@ -47,17 +36,16 @@ export default function BlockGrid({blocks, onBlockClick}) {
         <>
             {blocks.map((block) => {
 
-                const {x, y, position, nextPosition, type, id} = block;
+                const {x, y, type, id, $machine} = block;
 
                 return (
                     <BoxContainer
                         key={id}
-                        position={position}
-                        nextPosition={nextPosition}
+                        machine={$machine}
                     >
-                        {({position: desiredPosition}) => (
+                        {({position}) => (
                             <Box
-                                position={desiredPosition}
+                                position={position}
                                 geometry={[1, 1, 1]}
                                 color={type}
                                 onClick={() => {

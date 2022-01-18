@@ -51,17 +51,7 @@ class PresentationModel {
                     ...conversionConstants
                 });
 
-                const position = [
-                    x,
-                    y,
-                    z
-                ];
-
-                // console.log({
-                //     ...event.data,
-                //     nextPosition,
-                //     position
-                // });
+                const position = [x, y, z];
 
                 this._map[event.data.block.id] = {
                     state: "spawning",

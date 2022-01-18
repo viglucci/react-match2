@@ -12,6 +12,7 @@ import {
 import Stage from './components/Stage';
 import WinLossOverlay from './components/WinLossOverlay';
 import machineConfig from './machine';
+import viewMachineConfig from './machines/view-machine';
 import staticLevel from './level';
 import './App.css';
 
@@ -35,23 +36,33 @@ const gameMachine = createMachine({
     context: {
         ...initialContext,
         model: dataModel,
-        presentationModel: presentationModel
+        // presentationModel: presentationModel
     },
 });
 
+const viewMachine = createMachine(viewMachineConfig);
+
 export default function App() {
     const [state, send]
-        = useMachine(gameMachine, { devTools: true });
+        = useMachine(gameMachine, {devTools: true});
     const {context} = state;
+
+    const [viewState, sendViewMachine]
+        = useMachine(viewMachine, {
+            context: {
+                map: presentationModel._map,
+                list: presentationModel._list
+            }
+        });
 
     useEffect(() => {
         const sub = context.model.events.subscribe((e) => {
-            context.presentationModel.handleEvent(e);
+            sendViewMachine(e);
         });
         return () => {
             sub.unsubscribe();
         };
-    }, [context.presentationModel, context.model.events]);
+    }, [sendViewMachine, context.model.events]);
 
     const {goals, progress, moves} = context;
 
@@ -98,16 +109,18 @@ export default function App() {
                     <div className='p-4 border-solid border-2 border-gray-700 rounded relative'
                          style={{width: 600, height: 600}}>
 
-                        <Stage blocks={context.presentationModel.getList()} onBlockClick={({x, y}) => {
-                            if (!state.matches('MATCHING')) {
-                                return;
-                            }
-                            send({
-                                type: 'SELECT',
-                                x,
-                                y
-                            })
-                        }}/>
+                        <Stage
+                            blocks={viewState.context.list}
+                            onBlockClick={({x, y}) => {
+                                if (!state.matches('MATCHING')) {
+                                    return;
+                                }
+                                send({
+                                    type: 'SELECT',
+                                    x,
+                                    y
+                                })
+                            }}/>
 
                         {state.matches('WON') || state.matches('LOST')
                             ? <WinLossOverlay state={state.value}/>
