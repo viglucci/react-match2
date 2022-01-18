@@ -1,17 +1,17 @@
 const level = {
-    moves: 100,
+    moves: 10,
     goals: [
         {
             type: "blue",
-            count: 120,
+            count: 12,
         },
         {
             type: "lime",
-            count: 200,
+            count: 20,
         },
         {
             type: "red",
-            count: 80,
+            count: 8,
         }
     ],
     matrix:
