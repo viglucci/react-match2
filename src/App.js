@@ -11,7 +11,7 @@ import {
 } from './helpers';
 import Stage from './components/Stage';
 import WinLossOverlay from './components/WinLossOverlay';
-import machineConfig from './machine';
+import machineConfig from './machines/game-machine';
 import viewMachineConfig from './machines/view-machine';
 import staticLevel from './level';
 import './App.css';
