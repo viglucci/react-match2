@@ -1,4 +1,4 @@
-import {assign, createMachine, spawn} from "xstate";
+import {assign, spawn} from "xstate";
 import {calcSpawnZ, vec3FromCoords} from "../helpers";
 import blockMachine from "./block-machine";
 
