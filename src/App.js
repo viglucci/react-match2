@@ -1,18 +1,11 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import classNames from 'classnames';
 import {useMachine} from '@xstate/react';
-import {createMachine} from 'xstate';
 // import {inspect} from '@xstate/inspect';
-import {
-    computeGoalRemaining,
-    dataModelFromMatrix,
-    mapBackgroundColorClass,
-    presentationModelFromDataModel
-} from './helpers';
+import {computeGoalRemaining, mapBackgroundColorClass} from './helpers';
 import Stage from './components/Stage';
 import WinLossOverlay from './components/WinLossOverlay';
-import machineConfig from './machines/game-machine';
-import viewMachineConfig from './machines/view-machine';
+import gameMachine from './machines/game-machine';
 import staticLevel from './level';
 import './App.css';
 
@@ -22,47 +15,15 @@ import './App.css';
 //     iframe: false // open in new window
 // });
 
-const initialContext = {
-    moves: staticLevel.moves,
-    goals: staticLevel.goals,
+const gameMachineClone = gameMachine.withContext({
+    ...staticLevel,
     progress: {},
-};
-
-const dataModel = dataModelFromMatrix(staticLevel.matrix);
-const presentationModel = presentationModelFromDataModel(dataModel);
-
-const gameMachine = createMachine({
-    ...machineConfig,
-    context: {
-        ...initialContext,
-        model: dataModel,
-        // presentationModel: presentationModel
-    },
 });
 
-const viewMachine = createMachine(viewMachineConfig);
-
 export default function App() {
-    const [state, send]
-        = useMachine(gameMachine, {devTools: true});
+    const [state, send] = useMachine(gameMachineClone, {devTools: true});
     const {context} = state;
-
-    const [viewState, sendViewMachine]
-        = useMachine(viewMachine, {
-            context: {
-                map: presentationModel.map,
-                list: presentationModel.list
-            }
-        });
-
-    useEffect(() => {
-        const sub = context.model.events.subscribe((e) => {
-            sendViewMachine(e);
-        });
-        return () => {
-            sub.unsubscribe();
-        };
-    }, [sendViewMachine, context.model.events]);
+    const {$viewMachine} = context;
 
     const {goals, progress, moves} = context;
 
@@ -110,7 +71,8 @@ export default function App() {
                          style={{width: 600, height: 600}}>
 
                         <Stage
-                            blocks={viewState.context.list}
+                            machine={$viewMachine}
+                            // blocks={viewState.context.list}
                             onBlockClick={({x, y}) => {
                                 if (!state.matches('MATCHING')) {
                                     return;

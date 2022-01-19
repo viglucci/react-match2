@@ -2,7 +2,7 @@ import { useRef } from "react";
 // import { useHelper } from "@react-three/drei";
 // import { PointLightHelper } from "three";
 import BlockGrid from "./BlockGrid";
-// import colors from "tailwindcss/colors";
+import colors from "tailwindcss/colors";
 import { OrbitControls, OrthographicCamera } from "@react-three/drei";
 
 export default function Scene({ blocks, onBlockClick }) {
@@ -29,10 +29,10 @@ export default function Scene({ blocks, onBlockClick }) {
                 enableRotate={false}
             />
 
-            {/*<gridHelper args={[30, 30, colors.gray['800'], colors.gray['800']]} />*/}
+            <gridHelper args={[30, 30, colors.gray['800'], colors.gray['800']]} />
 
             <ambientLight />
-            <pointLight ref={pointLightRef} position={[0, 10, 30]} />
+            <pointLight ref={pointLightRef} position={[0, 10, 0]} />
 
             <BlockGrid blocks={blocks} onBlockClick={onBlockClick} />
         </>

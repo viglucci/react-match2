@@ -1,18 +1,17 @@
 import {coordsToListIndex, getConnectedCoords, isOnBoard, listIndexToCoords, randomBlock} from "./helpers";
-import {Subject} from "rxjs";
+
 
 class DataModel {
     _list = [];
     _matches = [];
     _dimensions = {};
-    events = new Subject();
 
     getDimensions() {
         return this._dimensions;
     }
 
-    getMatches({ x, y }) {
-        const listIdx = coordsToListIndex({ x, y }, this._dimensions.width);
+    getMatches({x, y}) {
+        const listIdx = coordsToListIndex({x, y}, this._dimensions.width);
         return this._matches[listIdx];
     }
 
@@ -20,8 +19,8 @@ class DataModel {
         return this._list;
     }
 
-    getItem({ x, y }) {
-        const listIdx = coordsToListIndex({ x, y }, this._dimensions.width);
+    getItem({x, y}) {
+        const listIdx = coordsToListIndex({x, y}, this._dimensions.width);
         return this._list[listIdx];
     }
 
@@ -30,30 +29,28 @@ class DataModel {
     }
 
     remove(index) {
-        this.events.next({
+        const event = {
             type: "REMOVED",
-            data: {
-                ...this._list[index]
-            }
-        });
+            ...this._list[index]
+        };
         this._list[index].block = null;
+        return event;
     }
 
     shift() {
+        const events = [];
         const depths = {};
         for (let i = this._list.length - 1; i >= 0; i--) {
-            const { x, y, block } = this._list[i];
+            const {x, y, block} = this._list[i];
             if (block) {
                 const deepestAvailable = depths[x] || -1;
                 if (deepestAvailable >= 0) {
-                    const newListIdx = coordsToListIndex({ x, y: deepestAvailable }, this._dimensions.width);
-                    this.events.next({
+                    const newListIdx = coordsToListIndex({x, y: deepestAvailable}, this._dimensions.width);
+                    events.push({
                         type: 'SHIFTED',
-                        data: {
-                            previous: { x, y },
-                            current: { x, y: deepestAvailable },
-                            block
-                        }
+                        previous: {x, y},
+                        current: {x, y: deepestAvailable},
+                        block
                     });
                     this._list[newListIdx].block = {
                         ...block
@@ -65,25 +62,26 @@ class DataModel {
                 depths[x] = Math.max(depths[x] || 0, y);
             }
         }
+        return events;
     }
 
     spawn(blockTypes) {
+        const events = [];
         for (let i = this._list.length - 1; i >= 0; i--) {
-            const { block } = this._list[i];
+            const {block} = this._list[i];
             if (!block) {
                 const newBlock = randomBlock(blockTypes);
                 this._list[i].block = newBlock;
-                const { x, y } = listIndexToCoords(i, this.getDimensions().width);
-                this.events.next({
+                const {x, y} = listIndexToCoords(i, this.getDimensions().width);
+                events.push({
                     type: 'SPAWNED',
-                    data: {
-                        x,
-                        y,
-                        block: newBlock
-                    }
+                    x,
+                    y,
+                    block: newBlock
                 });
             }
         }
+        return events;
     }
 
     _buildMatchesList() {
@@ -99,7 +97,7 @@ class DataModel {
             adjacencyList[cellIndex] = adjacencyList[cellIndex] || [];
             adjacentsOfType[cellIndex] = adjacentsOfType[cellIndex] || [];
 
-            const { top, right, bottom, left } = getConnectedCoords(cell);
+            const {top, right, bottom, left} = getConnectedCoords(cell);
 
             [top, right, bottom, left].forEach((adjacent) => {
                 if (isOnBoard(adjacent, this._dimensions)) {

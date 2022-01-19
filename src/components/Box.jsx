@@ -1,8 +1,7 @@
-import {useRef} from "react";
+import {useMemo, useRef} from "react";
 import {mapMeshColor} from "../helpers";
-import {Vector3} from "three";
+import {Shape, Vector3} from "three";
 import {useFrame} from "@react-three/fiber";
-
 
 export default function Box(props) {
 
@@ -27,6 +26,36 @@ export default function Box(props) {
             0.1);
     });
 
+    const memoizedGeometryArgs = useMemo(() => {
+        // https://discourse.threejs.org/t/round-edged-box/1402
+
+        const radius0 = .05;
+        const height = geometry[0];
+        const width = geometry[1];
+        const depth = geometry[2];
+        const smoothness = 10;
+
+        let shape = new Shape();
+        let eps = 0.00001;
+        let radius = radius0 - eps;
+        shape.absarc( eps, eps, eps, -Math.PI / 2, -Math.PI, true );
+        shape.absarc( eps, height -  radius * 2, eps, Math.PI, Math.PI / 2, true );
+        shape.absarc( width - radius * 2, height -  radius * 2, eps, Math.PI / 2, 0, true );
+        shape.absarc( width - radius * 2, eps, eps, 0, -Math.PI / 2, true );
+
+        const arg1 = {
+            depth: depth - radius0 * 2,
+            bevelEnabled: true,
+            bevelSegments: smoothness * 2,
+            steps: 1,
+            bevelSize: radius,
+            bevelThickness: radius0,
+            curveSegments: smoothness
+        };
+
+        return [shape, arg1];
+    }, []);
+
     return (
         <mesh
             {...rest}
@@ -34,7 +63,8 @@ export default function Box(props) {
             ref={mesh}
             scale={1}
         >
-            <boxGeometry args={geometry}/>
+            {/*<boxGeometry args={geometry}/>*/}
+            <extrudeBufferGeometry args={memoizedGeometryArgs} />
             <meshStandardMaterial color={hexColor}/>
         </mesh>
     );

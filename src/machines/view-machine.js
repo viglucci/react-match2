@@ -1,20 +1,14 @@
-import {assign, spawn} from "xstate";
+import {assign, createMachine, spawn} from "xstate";
 import {calcSpawnZ, vec3FromCoords} from "../helpers";
 import blockMachine from "./block-machine";
 
-const machineConfig = {
-    id: 'gameMachine',
+const machineConfig = createMachine({
+    id: 'viewMachine',
     initial: 'idle',
     context: {
         list: [],
         map: {},
-        conversionConstants: {
-            padding: 0.2,
-            width: 1,
-            height: 1,
-            matrixWidth: 6,
-            matrixHeight: 6
-        }
+        conversionConstants: {}
     },
     entry: assign((ctx) => {
         Object.keys(ctx.map).forEach((id) => {
@@ -22,11 +16,7 @@ const machineConfig = {
             const position = vec3FromCoords({
                 x,
                 y,
-                padding: 0.2,
-                width: 1,
-                height: 1,
-                matrixWidth: 6,
-                matrixHeight: 6
+                ...ctx.conversionConstants
             });
             const blockMachineContext = {
                 position,
@@ -39,7 +29,7 @@ const machineConfig = {
                     width: 6,
                     height: 6
                 },
-                padding: 0.2
+                padding: ctx.conversionConstants.padding
             };
             ctx.map[id].$machine = spawn(blockMachine.withContext(blockMachineContext), `block-${id}`);
         });
@@ -55,7 +45,7 @@ const machineConfig = {
         REMOVED: {
             actions: [
                 assign((ctx, event) => {
-                    delete ctx.map[event.data.block.id];
+                    delete ctx.map[event.block.id];
                     ctx.list = Object.keys(ctx.map).map((id) => {
                         return ctx.map[id];
                     });
@@ -66,19 +56,19 @@ const machineConfig = {
         SHIFTED: {
             actions: [
                 assign((ctx, event) => {
-                    const blockId = event.data.block.id;
+                    const blockId = event.block.id;
 
                     ctx.map[blockId].$machine.send({
                         type: 'POSITION_UPDATE',
                         position: vec3FromCoords({
-                            x: event.data.current.x,
-                            y: event.data.current.y,
+                            x: event.current.x,
+                            y: event.current.y,
                             ...ctx.conversionConstants
                         })
                     });
 
-                    ctx.map[blockId].x = event.data.current.x;
-                    ctx.map[blockId].y = event.data.current.y;
+                    ctx.map[blockId].x = event.current.x;
+                    ctx.map[blockId].y = event.current.y;
 
                     ctx.list = Object.keys(ctx.map).map((id) => {
                         return ctx.map[id];
@@ -91,9 +81,9 @@ const machineConfig = {
         SPAWNED: {
             actions: [
                 assign((ctx, event) => {
-                    const id = event.data.block.id;
-                    const matrixX = event.data.x;
-                    const matrixY = event.data.y;
+                    const id = event.block.id;
+                    const matrixX = event.x;
+                    const matrixY = event.y;
                     const conversionConstants = ctx.conversionConstants;
 
                     const vec3 = vec3FromCoords({
@@ -121,13 +111,13 @@ const machineConfig = {
                             width: conversionConstants.matrixWidth,
                             height: conversionConstants.matrixHeight
                         },
-                        padding: 0.2
+                        padding: conversionConstants.padding
                     };
 
                     const $machine = spawn(blockMachine.withContext(blockMachineContext), `block-${id}`);
 
-                    ctx.map[event.data.block.id] = {
-                        ...{...event.data.block},
+                    ctx.map[event.block.id] = {
+                        ...{...event.block},
                         x: matrixX,
                         y: matrixY,
                         $machine
@@ -142,6 +132,6 @@ const machineConfig = {
             ]
         }
     }
-};
+});
 
 export default machineConfig;
