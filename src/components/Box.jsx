@@ -54,7 +54,7 @@ export default function Box(props) {
         };
 
         return [shape, arg1];
-    }, []);
+    }, [geometry]);
 
     return (
         <mesh
