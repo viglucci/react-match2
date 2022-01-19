@@ -54,7 +54,8 @@ export default function Box(props) {
         };
 
         return [shape, arg1];
-    }, [geometry]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <mesh
