@@ -74,7 +74,6 @@ export default function App() {
 
                         <Stage
                             machine={$viewMachine}
-                            // blocks={viewState.context.list}
                             onBlockClick={({x, y}) => {
                                 if (!state.matches('MATCHING')) {
                                     return;
