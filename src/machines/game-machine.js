@@ -1,8 +1,35 @@
-import {  assign } from 'xstate';
+import {assign, createMachine, spawn} from 'xstate';
+import {dataModelFromMatrix, presentationModelFromDataModel} from '../helpers';
+import viewMachine from "./view-machine";
 
-const machineConfig = {
+const machineConfig = createMachine({
     id: 'gameMachine',
     initial: 'MATCHING',
+    entry: assign((ctx) => {
+        ctx.model = dataModelFromMatrix(ctx.matrix);
+
+        const presentationModel
+            = presentationModelFromDataModel(ctx.model);
+
+        ctx.$viewMachine = spawn(
+            viewMachine.withContext({
+                map: presentationModel.map,
+                list: presentationModel.list,
+                conversionConstants: {
+                    padding: 0.07,
+                    width: 1,
+                    height: 1,
+                    matrixWidth: 6,
+                    matrixHeight: 6
+                }
+            }),
+            viewMachine.id
+        );
+
+        delete ctx.matrix;
+
+        return ctx;
+    }),
     states: {
         MATCHING: {
             initial: 'IDLE',
@@ -10,19 +37,20 @@ const machineConfig = {
                 IDLE: {
                     on: {
                         'SELECT': {
-                            target: 'SHIFTING',
+                            target: 'CONDITIONS',
                             actions: assign((context, event) => {
-                                const { goals, model } = context;
-                                let { moves } = context;
+                                const {goals, model} = context;
+                                let {moves} = context;
 
-                                const matched = model.getMatches({ x: event.x, y: event.y });
+                                const matched = model.getMatches({x: event.x, y: event.y});
 
-                                const { item: selectedItem } = model.getItem({ x: event.x, y: event.y });
+                                const {block: selectedItem} = model.getItem({x: event.x, y: event.y});
 
-                                if (selectedItem.type === 'empty') {
+                                if (selectedItem === 'empty') {
                                     return;
                                 }
 
+                                const removedEvents = [];
                                 // a match was made
                                 if (matched.length > 0) {
                                     // decrement moves
@@ -31,18 +59,27 @@ const machineConfig = {
                                     const goal = goals.find((g) => g.type === selectedItem.type);
                                     if (goal) {
                                         const matchCount = matched.length;
-                                        const newGoal = Math.max(0, goal.count - matchCount);
                                         // mutate the goal
-                                        goal.count = newGoal;
+                                        goal.count = Math.max(0, goal.count - matchCount);
                                     }
 
                                     matched.forEach((matchIdx) => {
-                                        model.remove(matchIdx);
+                                        removedEvents.push(model.remove(matchIdx));
                                     });
                                 }
 
-                                // model.shift();
+                                const shiftEvents = model.shift();
+
                                 model.update();
+
+                                const allEvents = [
+                                    ...removedEvents,
+                                    ...shiftEvents
+                                ];
+
+                                if (allEvents.length) {
+                                    context.$viewMachine.send(allEvents);
+                                }
 
                                 return {
                                     ...context,
@@ -53,27 +90,20 @@ const machineConfig = {
                         }
                     },
                 },
-                SHIFTING: {
-                    after: {
-                        300: 'CONDITIONS'
-                    },
-                    exit: [
-                        assign(({ model }) => {
-                            model.shift();
-                            model.update();
-                        })
-                    ] 
-                },
                 SPAWNING: {
                     after: {
                         200: 'IDLE'
                     },
                     exit: [
-                        assign(({ model, goals }) => {
+                        assign((ctx) => {
+                            const {model, goals} = ctx;
                             // only spawn in blocks which are part of the current goals
-                            const allowBlockTypes = goals.map(g => g.type);
-                            model.spawn(allowBlockTypes);
+                            const allowedBlockTypes = goals.map(g => g.type);
+                            const events = model.spawn(allowedBlockTypes);
                             model.update();
+                            if (events.length) {
+                                ctx.$viewMachine.send(events);
+                            }
                         })
                     ]
                 },
@@ -81,14 +111,14 @@ const machineConfig = {
                     always: [
                         {
                             target: '#gameMachine.LOST',
-                            cond: ({ moves, goals }) => {
+                            cond: ({moves, goals}) => {
                                 const goalsRemaining = goals.filter((g) => g.count > 0);
                                 return (moves <= 0) && (goalsRemaining.length > 0);
                             }
                         },
                         {
                             target: '#gameMachine.WON',
-                            cond: ({ moves, goals }) => {
+                            cond: ({goals}) => {
                                 const goalsRemaining = goals.filter((g) => g.count > 0);
                                 return goalsRemaining.length === 0;
                             }
@@ -107,6 +137,6 @@ const machineConfig = {
             type: 'final'
         },
     }
-};
+});
 
 export default machineConfig;
