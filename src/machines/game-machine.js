@@ -22,7 +22,8 @@ const machineConfig = createMachine({
                     matrixWidth: 6,
                     matrixHeight: 6
                 }
-            })
+            }),
+            viewMachine.id
         );
 
         delete ctx.matrix;

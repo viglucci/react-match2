@@ -1,7 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
 import {useMachine} from '@xstate/react';
-// import {inspect} from '@xstate/inspect';
+import {inspect} from '@xstate/inspect';
 import {computeGoalRemaining, mapBackgroundColorClass} from './helpers';
 import Stage from './components/Stage';
 import WinLossOverlay from './components/WinLossOverlay';
@@ -9,11 +9,11 @@ import gameMachine from './machines/game-machine';
 import staticLevel from './level';
 import './App.css';
 
-// inspect({
-//     // options
-//     // url: 'https://statecharts.io/inspect', // (default)
-//     iframe: false // open in new window
-// });
+inspect({
+    // options
+    // url: 'https://statecharts.io/inspect', // (default)
+    iframe: false // open in new window
+});
 
 const gameMachineClone = gameMachine.withContext({
     ...staticLevel,

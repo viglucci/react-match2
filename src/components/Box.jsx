@@ -1,7 +1,7 @@
-import {useMemo, useRef} from "react";
-import {mapMeshColor} from "../helpers";
-import {Shape, Vector3} from "three";
-import {useFrame} from "@react-three/fiber";
+import {useMemo, useRef} from 'react';
+import {mapMeshColor} from '../helpers';
+import {Shape, Vector3} from 'three';
+import {useFrame} from '@react-three/fiber';
 
 export default function Box(props) {
 

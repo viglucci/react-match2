@@ -1,9 +1,9 @@
-import { useRef } from "react";
-// import { useHelper } from "@react-three/drei";
-// import { PointLightHelper } from "three";
-import BlockGrid from "./BlockGrid";
-import colors from "tailwindcss/colors";
-import { OrbitControls, OrthographicCamera } from "@react-three/drei";
+import { useRef } from 'react';
+// import { useHelper } from '@react-three/drei';
+// import { PointLightHelper } from 'three';
+import BlockGrid from './BlockGrid';
+import colors from 'tailwindcss/colors';
+import { OrbitControls, OrthographicCamera } from '@react-three/drei';
 
 export default function Scene({ blocks, onBlockClick }) {
 

@@ -1,5 +1,5 @@
-import Box from "./Box";
-import {useActor} from "@xstate/react";
+import Box from './Box';
+import {useActor} from '@xstate/react';
 
 function BoxContainer({children, machine}) {
     const [state] = useActor(machine);
