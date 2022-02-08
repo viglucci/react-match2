@@ -1,3 +1,5 @@
+import colors from 'tailwindcss/colors';
+import DataModel from "./Model";
 
 // const BLOCK_TYPES = [
 //     'lime',
@@ -15,7 +17,7 @@ function visitEach(matrix, cb) {
     }
 }
 
-function getConnectedCoords({ x, y }) {
+export function getConnectedCoords({ x, y }) {
     const top = { x: x, y: y - 1 };
     const right = { x: x + 1, y };
     const bottom = { x: x, y: y + 1 };
@@ -28,15 +30,14 @@ function getConnectedCoords({ x, y }) {
     };
 }
 
-function isOnBoard({ x, y }, { width, height }) {
+export function isOnBoard({ x, y }, { width, height }) {
     return y >= 0 &&
         y < height &&
         x >= 0 &&
         x < width;
 }
 
-
-const randomBlock = (allowedBlocks) => {
+export const randomBlock = (allowedBlocks) => {
     const randomtype = allowedBlocks[Math.floor(Math.random() * allowedBlocks.length)];
     return {
         type: randomtype
@@ -64,14 +65,14 @@ export function buildFlatList(matrix, width) {
     return list;
 }
 
-export function modelFromMatrix(matrix) {
+export function dataModelFromMatrix(matrix) {
 
     const dimensions = {
         height: matrix.length,
         width: matrix[0].length,
     };
 
-    const model = new Model();
+    const model = new DataModel();
 
     model._dimensions = dimensions;
     model._list = buildFlatList(matrix, dimensions.width);
@@ -80,122 +81,92 @@ export function modelFromMatrix(matrix) {
     return model;
 }
 
-class Model {
-    _list = [];
-    _matches = [];
-    _dimensions = {};
+export function vec3FromCoords({ x, y, padding, width, height, matrixWidth, matrixHeight }) {
 
-    getDimensions() {
-        return this._dimensions;
+    const originX = (padding / 2) + (width / 2);
+    const originY = (padding / 2) + (height / 2);
+
+    const vec3 = [originX, height / 2, originY];
+
+    const offsetX = width + padding;
+    const midX = matrixWidth / 2;
+    let positionFromCenterX = (x % midX) + 1;
+
+    // handling blocks left of center
+    if (x < midX) {
+        positionFromCenterX = positionFromCenterX - (midX + 1);
+        vec3[0] = originX + (positionFromCenterX * offsetX);
+    }
+    // blocks right of center
+    else if (positionFromCenterX > 1) {
+        vec3[0] = originX + ((positionFromCenterX - 1) * offsetX);
     }
 
-    getMatches({ x, y }) {
-        const listIdx = coordsToListIndex({ x, y }, this._dimensions.width);
-        return this._matches[listIdx];
+    const offsetY = height + padding;
+    const midY = matrixHeight / 2;
+    let positionFromCenterY = (y % midY) + 1;
+
+    // handling blocks top of center
+    if (y < midY) {
+        positionFromCenterY = positionFromCenterY - (midY + 1);
+        vec3[2] = originY + (positionFromCenterY * offsetY);
+    }
+    // blocks bottom of center
+    else if (positionFromCenterY > 1) {
+        vec3[2] = originY + ((positionFromCenterY - 1) * offsetY);
     }
 
-    getList() {
-        return this._list;
-    }
+    return vec3;
+}
 
-    getItem({ x, y }) {
-        const listIdx = coordsToListIndex({ x, y }, this._dimensions.width);
-        return this._list[listIdx];
-    }
+export const mapMeshColor = (type) => {
+    return ({
+        'lime': colors.lime['500'],
+        'red': colors.red['500'],
+        'blue': colors.blue['500'],
+        'orange': colors.orange['500'],
+        'empty': colors.gray['500'],
+    })[type];
+};
 
-    remove(index) {
-        this._list[index].item.type = 'empty';
-    }
+export const mapBackgroundColorClass = (type) => {
+    return {
+        'bg-lime-400': type === 'lime',
+        'bg-red-400': type === 'red',
+        'bg-blue-400': type === 'blue',
+        'bg-orange-400': type === 'orange',
+        'bg-gray-900': type === 'empty'
+    };
+};
 
-    update() {
-        this._matches = this._buildMatchesList();
-    }
+export const computeGoalRemaining = (goals, progress, type) => {
+    const goal = goals.find((g) => g.type === type);
+    if (!goal) return 0;
+    const current = progress[type] || 0;
+    return goal.count - current;
+};
 
-    shift() {
-        const depths = {};
-        for (let i = this._list.length - 1; i >= 0; i--) {
-            const { x, y, item } = this._list[i];
-            if (item.type !== 'empty') {
-                const deepestAvailable = depths[x] || -1;
-                if (deepestAvailable >= 0) {
-                    const newListIdx = coordsToListIndex({ x, y: deepestAvailable }, this._dimensions.width);
-                    this._list[newListIdx].item.type = item.type;
-                    this._list[i].item.type = 'empty';
-                    depths[x]--;
-                }
-            } else {
-                depths[x] = Math.max(depths[x] || 0, y);
-            }
-        }
-    }
-
-    spawn(blockTypes) {
-        for (let i = this._list.length - 1; i >= 0; i--) {
-            const { item } = this._list[i];
-            if (item.type === 'empty') {
-                this._list[i].item = randomBlock(blockTypes);
-            }
-        }
-    }
-
-    _buildMatchesList() {
-        function areSameType(subject, observed) {
-            return subject
-                && subject.item.type === observed.item.type;
-        }
-
-        const adjacentsOfType = [];
-        const adjacencyList = [];
-        this._list.forEach((item) => {
-            const cellIndex = coordsToListIndex(item, this._dimensions.width);
-
-            adjacencyList[cellIndex] = adjacencyList[cellIndex] || [];
-            adjacentsOfType[cellIndex] = adjacentsOfType[cellIndex] || [];
-
-            const { top, right, bottom, left } = getConnectedCoords(item);
-
-            [top, right, bottom, left].forEach((adjacent) => {
-                if (isOnBoard(adjacent, this._dimensions)) {
-                    const adjacentIndex = coordsToListIndex(adjacent, this._dimensions.width);
-                    adjacencyList[cellIndex].push(adjacentIndex);
-                    if (areSameType(this._list[adjacentIndex], item)) {
-                        adjacentsOfType[cellIndex].push(adjacentIndex);
-                    }
-                }
-            });
+export function presentationModelFromDataModel(dataModel) {
+    const blocks = dataModel._list.map(({ x, y, item }) => {
+        const { type } = item;
+        const vec3 = vec3FromCoords({
+            x,
+            y,
+            padding: 0.2,
+            width: 1,
+            height: 1,
+            matrixWidth: 6,
+            matrixHeight: 6
         });
-
-        const seen = new Set();
-        const matchSets = [];
-        for (let i = 0; i < adjacentsOfType.length; i++) {
-            if (seen.has(i)) {
-                continue;
-            }
-            const path = [];
-            let queue = [i];
-            while (queue.length > 0) {
-                let next = queue.pop();
-                if (!seen.has(next)) {
-                    seen.add(next);
-                    let adjacents = adjacentsOfType[next];
-                    for (let j = 0; j < adjacents.length; j++) {
-                        queue.push(adjacents[j]);
-                    }
-                    path.push(next);
-                }
-            }
-            if (path.length > 1) {
-                matchSets.push(path);
-            }
-        }
-
-        const matches = Array(this._list.length).fill([]);
-        matchSets.forEach((matchSet) => {
-            matchSet.forEach((cellIndex) => {
-                matches[cellIndex] = matchSet;
-            });
-        });
-
-        return matches;
-    }
+        return {
+            x,
+            y,
+            vec3,
+            type
+        };
+    });
+    const model = {
+        blocks
+    };
+    return model;
 }

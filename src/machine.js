@@ -71,8 +71,8 @@ const machineConfig = {
                     exit: [
                         assign(({ model, goals }) => {
                             // only spawn in blocks which are part of the current goals
-                            const allowBlockTypes = goals.map(g => g.type);
-                            model.spawn(allowBlockTypes);
+                            const allowedBlockTypes = goals.map(g => g.type);
+                            model.spawn(allowedBlockTypes);
                             model.update();
                         })
                     ]
