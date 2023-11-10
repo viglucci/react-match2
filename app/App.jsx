@@ -164,7 +164,7 @@ export default function App() {
               Clear the listed number of squares for each color in the goals box at the top.
             </li>
             <li className='mb-2'>
-              Each successful match will exhaust one "move". Complete the goals with the set number of moves shown in the moves box above.
+              Each successful match will exhaust one &quot;move&quot;. Complete the goals with the set number of moves shown in the moves box above.
             </li>
           </ul>
         </div>
