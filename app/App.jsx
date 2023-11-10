@@ -158,7 +158,7 @@ export default function App() {
           <div className='text-xl'>Instructions</div>
           <ul className='list-disc ml-8 mt-4'>
             <li className='mb-2'>
-              Click on squares with atleast one adjacent same color square to clear the square and all connected same color squares from the board.
+              Clear squares by clicking on squares with at least one adjacent same color square to clear connected same color squares from the board.
             </li>
             <li className='mb-2'>
               Clear the listed number of squares for each color in the goals box at the top.
